@@ -1,0 +1,18 @@
+{
+  "command": "node",
+  "args": ["main.mjs"],
+  "restart_policy": "always",
+  "display_name": "WeChat Dispatcher",
+  "description": "微信任务派发器：接收微信消息并自动向 Agent 派发执行",
+  "has_web_ui": true,
+  "ui_config": {
+    "display_name": "WeChat Dispatcher",
+    "views": [
+      {
+        "path": "/",
+        "entrypoint": "SIDECAR_UI_ENTRYPOINT_AUX_PANE",
+        "title": "微信任务派发"
+      }
+    ]
+  }
+}

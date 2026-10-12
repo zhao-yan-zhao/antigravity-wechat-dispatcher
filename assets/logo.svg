@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="wechatBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#07c160" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#wechatBg)" />
+  <!-- Big Bubble -->
+  <path d="M16 28 C16 19.16 24.06 12 34 12 C43.94 12 52 19.16 52 28 C52 36.84 43.94 44 34 44 C31.3 44 28.74 43.46 26.46 42.48 L19 45 L20.9 39.8 C17.88 36.68 16 32.54 16 28 Z" fill="#ffffff" />
+  <!-- Eye dots in big bubble -->
+  <circle cx="28" cy="25" r="2.5" fill="#07c160" />
+  <circle cx="40" cy="25" r="2.5" fill="#07c160" />
+  <!-- Rocket / Task Dispatch overlay badge -->
+  <circle cx="46" cy="46" r="12" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5" />
+  <path d="M42 46 L45 49 L51 43" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+</svg>
