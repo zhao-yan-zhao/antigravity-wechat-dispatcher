@@ -6,11 +6,12 @@
 [![Node: 24+](https://img.shields.io/badge/Node.js-24%2B-green.svg)](https://nodejs.org/)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero-brightgreen.svg)](#)
 [![Antigravity](https://img.shields.io/badge/Google-Antigravity%20Ready-blueviolet.svg)](#)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)](#)
+[![GitHub](https://img.shields.io/badge/GitHub-Repo-181717.svg?logo=github)](https://github.com/zhao-yan-zhao/antigravity-wechat-dispatcher)
+[![Gitee](https://img.shields.io/badge/Gitee-Repo-C71D23.svg?logo=gitee)](https://gitee.com/zhao-yan-happyhahaha/antigravity-wechat-dispatcher)
 
 **面向 Google Antigravity / Agentic Coding 的一体化移动端双向研发调度网关与高精度遥测监控看板**
 
-[功能全景](#-核心功能全景) • [快速开始](#-快速安装与启动) • [指令全集](#-微信--飞书随身指令全集) • [架构解析](#-项目架构与核心组件) • [免责声明](#-免责声明-disclaimer)
+[功能全景](#-核心功能全景) • [系统架构](#-项目架构与核心组件) • [快速开始](#-快速安装与启动) • [指令全集](#-微信--飞书随身指令全集) • [反馈与贡献](#-参与贡献-contributing) • [免责声明](#-免责声明-disclaimer)
 
 </div>
 
@@ -64,33 +65,40 @@
 
 ## 🏗️ 项目架构与核心组件
 
-```text
-┌────────────────────────────────────────────────────────┐
-│                   移动随身端 (Mobile)                   │
-│      微信 (WeChat)  |  飞书 (Feishu)  |  企业微信 (WeCom)  │
-└──────────────────────────┬─────────────────────────────┘
-                           │ (HTTP Webhook / iLink CDN)
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│           WeChat Dispatcher 核心服务 (Node.js 24)        │
-│  ┌──────────────────────┐    ┌──────────────────────┐  │
-│  │ 意图路由与安全守卫    │    │ 守护自愈与通知推送    │  │
-│  │ (RBAC / 动态验证码)  │    │ (Watchdog Supervisor)│  │
-│  └──────────┬───────────┘    └──────────┬───────────┘  │
-│             │                           │              │
-│  ┌──────────▼───────────────────────────▼───────────┐  │
-│  │     高性能 SQLite 遥测引擎 (node:sqlite)          │  │
-│  │     - 索引并聚合 4.5 亿+ Token 历史流水           │  │
-│  │     - 动态跟踪 Low / Med / High 模型档位           │  │
-│  │     - 探测 language_server.log 传输链路状态       │  │
-│  └──────────────────────┬───────────────────────────┘  │
-└─────────────────────────┼──────────────────────────────┘
-                          │ (IPC / Sidecar API)
-                          ▼
-┌────────────────────────────────────────────────────────┐
-│            Google Antigravity 研发工作台 & IDE          │
-│   (Brain 运行日志 / MCP 扩展生态 / 工作区代码与会话)      │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Mobile["📱 移动随身端 (Mobile Terminals)"]
+        direction LR
+        M1["💬 微信 (WeChat)"]
+        M2["🪶 飞书 (Feishu)"]
+        M3["🏢 企业微信 (WeCom)"]
+    end
+
+    Mobile -->|"HTTP Webhook / iLink CDN"| Gateway
+
+    subgraph Gateway["⚡ WeChat Dispatcher 核心中枢 (Node.js 24)"]
+        direction TB
+        subgraph TopServices["安全与守护"]
+            direction LR
+            S1["🛡️ 意图路由与安全守卫<br/>(RBAC / 4位动态验证码)"]
+            S2["🩺 守护自愈与通知推送<br/>(Watchdog Supervisor)"]
+        end
+        
+        subgraph TelemetryEngine["📊 高性能 SQLite 遥测引擎 (node:sqlite)"]
+            T1["• 毫秒级索引聚合 4.5 亿+ Token 历史流水<br/>• 实事实录 Low / Med / High 思考档位<br/>• 实时探测 language_server.log 传输链路状态"]
+        end
+
+        TopServices --> TelemetryEngine
+    end
+
+    Gateway -->|"IPC / Sidecar API"| Antigravity
+
+    subgraph Antigravity["💻 Google Antigravity 研发工作台 & IDE"]
+        direction LR
+        A1["🧠 Brain 运行日志"]
+        A2["🧰 MCP 扩展生态"]
+        A3["📂 工作区代码与会话"]
+    end
 ```
 
 ---
@@ -107,13 +115,18 @@
 1. **克隆项目到 Antigravity 插件目录**：
    ```bash
    cd ~/.gemini/config/plugins/
-   git clone https://github.com/your-username/wechat-dispatcher.git
+   
+   # GitHub 来源 (全球访问)
+   git clone https://github.com/zhao-yan-zhao/antigravity-wechat-dispatcher.git
+
+   # 或 Gitee 来源 (国内极速镜像)
+   git clone https://gitee.com/zhao-yan-happyhahaha/antigravity-wechat-dispatcher.git
    ```
 
 2. **配置初始化**：
    复制配置模板生成本地私有配置文件：
    ```bash
-   cd wechat-dispatcher/data
+   cd antigravity-wechat-dispatcher/data
    cp wechat_config.example.json wechat_config.json
    ```
 
@@ -173,7 +186,7 @@
 ## 📂 项目结构
 
 ```text
-wechat-dispatcher/
+antigravity-wechat-dispatcher/
 ├── assets/                     # 插件图标与界面示意图
 ├── data/                       # 数据与配置存储目录
 │   └── wechat_config.example.json  # 公开示例配置模板
@@ -204,9 +217,14 @@ wechat-dispatcher/
 
 ## 🤝 参与贡献 (Contributing)
 
-欢迎任何形式的贡献！
-* 如果发现了 Bug 或有新功能设想，欢迎提交 [Issues](https://github.com/your-username/wechat-dispatcher/issues)。
-* 欢迎提交 Pull Request（特别是针对 macOS / Linux 平台的系统指令兼容性适配）。
+欢迎任何形式的贡献与反馈！
+
+* 🐛 **报告 Bug 或提交建议**：
+  * **GitHub 用户**：欢迎提交 [GitHub Issues](https://github.com/zhao-yan-zhao/antigravity-wechat-dispatcher/issues)
+  * **Gitee 用户**：欢迎提交 [Gitee Issues](https://gitee.com/zhao-yan-happyhahaha/antigravity-wechat-dispatcher/issues)
+* 💡 **提交代码 (Pull Request)**：
+  * 欢迎提交 PR（特别是针对 macOS / Linux 跨平台指令适配或新增通知通道适配）。
+  * [GitHub Pull Requests](https://github.com/zhao-yan-zhao/antigravity-wechat-dispatcher/pulls) | [Gitee Pull Requests](https://gitee.com/zhao-yan-happyhahaha/antigravity-wechat-dispatcher/pulls)
 
 ---
 
