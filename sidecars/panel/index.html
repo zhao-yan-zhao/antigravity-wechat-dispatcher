@@ -3,12 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>AI助手 - 一体化研发工作台</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root, html, body {
+      background-color: #0b0c13 !important;
+      background: #0b0c13 !important;
+      color: #f1f5f9;
+      color-scheme: dark;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
+    body {
+      overflow-x: hidden;
+    }
+  </style>
+  <link rel="stylesheet" href="styles.css?v=20261026_real_account_v30">
   <script src="/preload.js"></script>
 </head>
 <body>
-  <div class="app-container">
+  <div class="app-container" style="background-color: #0b0c13 !important; min-height: 100vh;">
     <!-- 顶部双层防挤压导航头 -->
     <header class="app-header">
       <!-- 第一行：品牌、核心状态与全局刷新 -->
@@ -47,7 +66,7 @@
             <span class="pill-text">派发</span>
           </div>
 
-          <button id="btnRefreshAll" class="btn-refresh-icon" title="刷新全局状态">
+          <button id="btnRefreshAll" class="btn-refresh-icon" title="刷新数据 (双击或按 Ctrl+R 重新加载整页)">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
             </svg>
@@ -55,34 +74,36 @@
         </div>
       </div>
 
-      <!-- 第二行：会话选择器单独占满一行 -->
+      <!-- 第二行：会话选择器与工程操作栏 -->
       <div class="header-sub-row">
         <div class="session-bar">
           <span class="session-icon">📌</span>
-          <span class="session-label">会话</span>
           <select id="sessionSelect" class="session-select">
             <option value="">探测当前活跃会话...</option>
           </select>
-          <button id="btnOpenHostConv" class="btn btn-secondary btn-xs" style="padding: 2px 8px; font-size: 10px; white-space: nowrap;" title="在 Antigravity 主窗口中直接切换打开该会话">↗ 打开</button>
+          <button id="btnOpenHostConv" class="btn btn-secondary btn-xs" style="padding: 2px 6px; font-size: 10px; white-space: nowrap;" title="在 Antigravity 主窗口中直接切换打开该会话">↗ 打开</button>
+          <button id="btnNewSessionModal" class="btn btn-secondary btn-xs" style="padding: 2px 6px; font-size: 10px; white-space: nowrap; color: #a6e3a1;" title="新建工程会话或通用独立会话">➕会话</button>
+          <button id="btnNewProjectModal" class="btn btn-secondary btn-xs" style="padding: 2px 6px; font-size: 10px; white-space: nowrap; color: #89b4fa;" title="新建/登记研发工程">📦工程</button>
         </div>
       </div>
     </header>
 
     <!-- 紧凑胶囊导航栏（防折行、支持横向平滑滑动） -->
     <nav class="nav-tabs">
-      <button class="tab-btn active" data-tab="tab-timeline">
+      <button class="tab-btn active" data-tab="tab-traffic">
         <span class="tab-icon">⚡</span>
-        <span class="tab-text">流水</span>
+        <span class="tab-text">监控</span>
+        <span id="trafficCountBadge" class="tab-count" style="display:none;"></span>
       </button>
       <button class="tab-btn" data-tab="tab-tasks">
         <span class="tab-icon">📋</span>
         <span class="tab-text">看板</span>
-        <span id="taskCountBadge" class="tab-count">0</span>
+        <span id="taskCountBadge" class="tab-count" style="display:none;"></span>
       </button>
       <button class="tab-btn" data-tab="tab-wechat">
         <span class="tab-icon">📱</span>
         <span class="tab-text">微信</span>
-        <span id="wechatCountBadge" class="tab-count">0</span>
+        <span id="wechatCountBadge" class="tab-count" style="display:none;"></span>
       </button>
       <button class="tab-btn" data-tab="tab-mcp">
         <span class="tab-icon">🧰</span>
@@ -96,57 +117,401 @@
 
     <!-- 视图内容区域 -->
     <main class="views-wrapper">
-      <!-- 视图 1：执行流水 -->
-      <section id="tab-timeline" class="view-panel active">
-        <!-- 2x2 对称微渐变 Token 指标卡片 -->
-        <div class="metrics-grid">
-          <div class="metric-card card-glow-purple">
-            <div class="metric-top">
-              <span class="metric-title">总消耗 Token</span>
-              <span class="metric-badge">Total</span>
+      <!-- 视图 1：流量中枢 (深度融合 Antigravity-Manager: Token统计大屏 + 实时日志 + 会话流水) -->
+      <section id="tab-traffic" class="view-panel active">
+        <!-- Token 消费与流水总览 Header -->
+        <div class="traffic-header-card token-stats-header-card">
+          <div class="traffic-header-top-row">
+            <div class="traffic-title-row">
+              <span class="traffic-header-spark-badge">
+                <span class="spark-icon">⚡</span>
+              </span>
+              <div class="traffic-title-text-group">
+                <span class="traffic-main-title">遥测与流量中枢</span>
+                <span class="traffic-sub-desc">全局 Token 消耗、API 网关请求抓包与步骤复盘</span>
+              </div>
             </div>
-            <div id="statTokenTotal" class="metric-num text-gradient-purple">-</div>
+            <!-- 统计范畴切换器：当前会话 vs 全部历史 -->
+            <div class="telemetry-scope-switch" id="telemetryScopeSwitch">
+              <button class="scope-switch-btn active" data-scope="current" id="btnScopeCurrent" title="查看当前活跃开发工程会话 (微观逐单步明细)">
+                <span class="scope-icon">🎯</span>
+                <span class="scope-text">当前工程会话</span>
+              </button>
+              <button class="scope-switch-btn" data-scope="global" id="btnScopeGlobal" title="查看全部 350 个会话历史统计 (43.5亿 Token 宏观全景)">
+                <span class="scope-icon">🌐</span>
+                <span class="scope-text">全部</span>
+              </button>
+            </div>
           </div>
 
-          <div class="metric-card card-glow-green">
-            <div class="metric-top">
-              <span class="metric-title">缓存 Cache Read</span>
-              <span class="metric-badge">Saved</span>
+          <!-- 第二排：3 大核心看板切换 + 专用时间切片 & 实时监听 -->
+          <div class="traffic-nav-and-actions-row">
+            <div class="telemetry-seg-group traffic-subview-seg" id="telemetrySegGroup">
+              <button class="telemetry-seg-btn active" data-subview="stats" id="btnSubViewTokenStats" title="Bento 矩阵 · 用量全景 · 91天热力图 · 仪表盘">
+                <span class="seg-icon">📊</span>
+                <span class="seg-title">统计大屏</span>
+              </button>
+              <button class="telemetry-seg-btn" data-subview="traffic" id="btnSubViewTraffic" title="API 网关抓包 · 状态码 · 耗时 · 三栏报文 Diff">
+                <span class="seg-icon">🌐</span>
+                <span class="seg-title">请求日志</span>
+                <span id="subviewTrafficBadge" class="seg-badge">0</span>
+              </button>
+              <button class="telemetry-seg-btn" data-subview="timeline" id="btnSubViewTimeline" title="AI 逐步执行流 · 提问 · 工具调用 · 思维链">
+                <span class="seg-icon">📜</span>
+                <span class="seg-title">执行步骤</span>
+                <span id="subviewTimelineBadge" class="seg-badge">0 步</span>
+              </button>
             </div>
-            <div id="statTokenCache" class="metric-num text-green">-</div>
-          </div>
 
-          <div class="metric-card">
-            <div class="metric-top">
-              <span class="metric-title">输入 Input</span>
-              <span class="metric-badge">In</span>
+            <div class="traffic-actions-row">
+              <div class="time-range-group" id="trafficTimeRangeGroup">
+                <button class="range-btn" data-range="minute" title="过去 1 小时分钟级趋势">⚡ 分钟</button>
+                <button class="range-btn" data-range="hourly" title="过去 24 小时小时级律动">🕒 小时</button>
+                <button class="range-btn" data-range="daily" title="过去 7 天日级走势">📅 日</button>
+                <button class="range-btn active" data-range="weekly" title="过去 30 天周级走势">🗓️ 周</button>
+                <button class="range-btn" data-range="all" title="查看全部历史跨度">🌐 全部历史</button>
+              </div>
+              <div class="traffic-btn-bar">
+                <div id="trafficNetworkHealthBadge" class="network-health-pill healthy" title="底层传输链路状态 (监控 language_server.log)">
+                  <span class="health-dot"></span>
+                  <span id="trafficNetworkHealthText" class="health-label">链路正常</span>
+                </div>
+                <button id="btnTrafficAutoToggle" class="btn btn-secondary btn-xs active-toggle" title="开启/关闭实时监听">
+                  <span class="traffic-pulse-dot"></span>
+                  <span id="btnTrafficAutoText">实时监听</span>
+                </button>
+                <button id="btnTrafficExport" class="btn btn-secondary btn-icon-only" title="导出日志 JSON">📥</button>
+              </div>
             </div>
-            <div id="statTokenInput" class="metric-num text-muted">-</div>
-          </div>
-
-          <div class="metric-card card-glow-cyan">
-            <div class="metric-top">
-              <span class="metric-title">输出 Output</span>
-              <span class="metric-badge">Out</span>
-            </div>
-            <div id="statTokenOutput" class="metric-num text-cyan">-</div>
           </div>
         </div>
 
-        <div class="stream-toolbar">
-          <div class="stream-title-box">
-            <span class="stream-title">会话步骤流</span>
+        <!-- 子看板 1：【总览看板】图二 1:1 核心 Bento 矩阵 -->
+        <div id="subpanelTokenStats" class="telemetry-subpanel">
+          <!-- 上半区：用量调度全景 (左 60%) + 多维度排行榜 (右 40%) -->
+          <div class="overview-bento-grid bento-overview-grid">
+            <!-- 左上大卡：用量调度全景 (三栏复合内嵌) -->
+            <div class="bento-card bento-card-dispatch" id="cardUsageDispatch">
+              <div class="bento-card-header">
+                <span class="bento-card-title">用量调度全景</span>
+                <span class="bento-card-period-tag" id="dispatchPeriodTag">周期: 周</span>
+              </div>
+              <div class="dispatch-card-body">
+                <!-- 第一列：总消耗量与模型流向列表 -->
+                <div class="dispatch-col-tokens">
+                  <div class="dispatch-metric-block">
+                    <span class="dispatch-metric-label">总消耗量</span>
+                    <div class="dispatch-hero-tokens" id="dashboardTotalTokens">
+                      <span class="hero-num" id="trafficStatTokensTotal">125.0M</span>
+                      <span class="hero-unit">Tokens</span>
+                    </div>
+                    <div class="dispatch-breakdown-row" id="dashboardTokensBreakdown">
+                      <span class="breakdown-in" id="trafficTokensInBreakdown">入: 14.4M (3.5%)</span>
+                      <span class="breakdown-sep">/</span>
+                      <span class="breakdown-cache" id="trafficTokensCacheBreakdown">缓: 393.7M (96.1%)</span>
+                      <span class="breakdown-sep">/</span>
+                      <span class="breakdown-out" id="trafficTokensOutBreakdown">出: 1.5M (0.4%)</span>
+                      <span class="breakdown-sep">/</span>
+                      <span class="breakdown-reasoning" id="trafficTokensReasonBreakdown">思: 538.4K (0.1%)</span>
+                    </div>
+                  </div>
+                  <!-- 模型流向排行榜列表 -->
+                  <div class="dispatch-models-list" id="dashboardModelsList">
+                    <!-- JS 动态渲染 -->
+                  </div>
+                </div>
+
+                <!-- 第二列：辐射花环雷达图 (Radial Spikes Sunburst) -->
+                <div class="dispatch-col-sunburst">
+                  <div class="sunburst-canvas-container">
+                    <canvas id="canvasRadialSunburst" width="220" height="220"></canvas>
+                    <div class="sunburst-center-badge">
+                      <span class="sunburst-center-num" id="sunburstCenterTotal">125.0M</span>
+                      <span class="sunburst-center-label">SUMMARY</span>
+                    </div>
+                  </div>
+                  <div class="sunburst-legend" id="sunburstLegend">
+                    <span class="legend-item" title="缓 (Prompt Cache 命中复用)"><span class="legend-dot" style="background:#38bdf8"></span>缓 命中</span>
+                    <span class="legend-item" title="入 (未命中新增输入 Prompt)"><span class="legend-dot" style="background:#3fb950"></span>入 输入</span>
+                    <span class="legend-item" title="出 (模型生成输出 Completion)"><span class="legend-dot" style="background:#818cf8"></span>出 输出</span>
+                    <span class="legend-item" title="思 (思考过程 Thinking 推演)"><span class="legend-dot" style="background:#f59e0b"></span>思 思考</span>
+                  </div>
+                </div>
+
+                <!-- 第三列：预估支出与缓存节省 -->
+                <div class="dispatch-col-cost">
+                  <div class="dispatch-cost-card">
+                    <div class="cost-card-head">
+                      <span class="cost-card-title">预估支出</span>
+                      <span class="cost-pricing-link" id="btnOpenPricingModal" title="点击查看 AI 模型定价矩阵与计费核算标准">定价矩阵 ↗</span>
+                    </div>
+                    <div class="cost-hero-money text-emerald" id="trafficStatCost">$28.24</div>
+                    <div class="cost-sub-hint" id="trafficStatCostHint">均次 ~$0.013 / req</div>
+                  </div>
+
+                  <div class="dispatch-cache-card">
+                    <div class="cost-card-head">
+                      <span class="cost-card-title">缓存节省</span>
+                    </div>
+                    <div class="cost-hero-money text-cyan-glow" id="dashboardCacheSaved">+$158.84</div>
+                    <div class="cache-sub-hint" id="trafficStatCacheHint">
+                      <span class="cache-hit-num" id="trafficStatCacheHitRate">85.1%</span> 命中
+                    </div>
+                  </div>
+
+                  <div class="gateway-status-pill">
+                    <span class="status-dot-green"></span>
+                    <span>网关调用正常</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右上大卡：多维度排行榜 (账号 / 模型 双Tab) -->
+            <div class="bento-card bento-card-rankings" id="cardRankings">
+              <div class="ranking-header-row">
+                <div class="ranking-tab-pills" id="rankingTabGroup">
+                  <button class="rank-tab-btn active" data-rank="account" id="btnRankTabAccounts">账号</button>
+                  <button class="rank-tab-btn" data-rank="model" id="btnRankTabModels">模型</button>
+                </div>
+              </div>
+              <!-- 排行榜滚动列表容器 -->
+              <div class="dashboard-ranking-list ranking-list-body" id="dashboardRankingList">
+                <div class="rank-row-item" style="opacity: 0.7;">
+                  <div class="rank-row-main">
+                    <div class="rank-left-info">
+                      <span class="rank-medal-badge rank-medal-1">1</span>
+                      <span class="rank-entity-name" style="color: var(--text-muted);">正在同步活跃凭证...</span>
+                    </div>
+                    <div class="rank-right-metrics">
+                      <span class="rank-metric-tokens" style="color: var(--text-muted);">-</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="ranking-foot-bar">
+                <span class="foot-label">网关防刷隔离</span>
+                <span class="foot-status"><span class="foot-dot"></span> 已激活</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 下半区：24小时活跃律动 (左 50%) + 效能指数彩虹仪表盘 (右 50%) -->
+          <div class="lower-bento-grid">
+            <!-- 左下卡片：24小时活跃律动 -->
+            <div class="bento-card bento-card-hourly-pulse">
+              <div class="pulse-card-header">
+                <div class="pulse-header-left">
+                  <span class="pulse-icon">⏱️</span>
+                  <span class="pulse-title">24小时活跃律动</span>
+                </div>
+                <div class="pulse-header-right" id="hourlyTrendSubtitle">
+                  <span>均次负载: <b id="pulseAvgLoad">55.5K</b></span>
+                  <span class="pulse-sep">|</span>
+                  <span>峰值: <b id="pulsePeakHour">12:00</b></span>
+                </div>
+              </div>
+              <div class="hourly-bars-container" id="hourlyBarsContainer">
+                <!-- 24 根绿色粒子跳动柱由 JS 渲染 -->
+              </div>
+              <div class="pulse-card-foot">
+                <div class="pulse-foot-left">
+                  <span>⚖️ 入出倍率: <b id="pulseRatioText">218.9 : 1</b></span>
+                </div>
+                <div class="pulse-foot-right">
+                  <span>低谷: <b id="pulseTroughHour">13:00</b></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 右下卡片：效能指数 · J23 (半圆彩虹发光仪表盘) -->
+            <div class="bento-card bento-card-efficiency">
+              <div class="efficiency-card-header">
+                <div class="eff-header-left">
+                  <span class="eff-icon">🔥</span>
+                  <span class="eff-title">效能指数 · J23</span>
+                </div>
+                <div class="eff-header-right">
+                  <span class="eff-throughput-tag">⚡ 0 延时吞吐</span>
+                </div>
+              </div>
+              <!-- 半圆彩虹仪表盘 Canvas -->
+              <div class="gauge-canvas-wrapper">
+                <canvas id="canvasRainbowGauge" width="280" height="150"></canvas>
+                <div class="gauge-center-content">
+                  <div class="gauge-hit-rate" id="gaugeHitRateText">命中率: 85.1%</div>
+                  <div class="gauge-reused-tokens" id="gaugeReusedTokensText">105.9M 复用 TOKEN 规模</div>
+                </div>
+              </div>
+              <div class="efficiency-card-foot">
+                <div class="eff-foot-left">
+                  <span>未缓存输入: <b id="gaugeUncachedInputText">18.6M</b></span>
+                </div>
+                <div class="eff-foot-right">
+                  <span class="text-emerald-glow" id="gaugeSavedMoneyText">+$158.84 节省</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 全局用量 91 天（13周）活动热力图 (内嵌于统计大屏底部) -->
+          <div class="bento-card bento-card-heatmap" style="margin-top: 14px;">
+            <div class="bento-card-header">
+              <div class="bento-card-title-group">
+                <span class="bento-card-icon" style="color: #f87171;">🔥</span>
+                <span class="bento-card-title">91天（13周）活动热力图</span>
+                <span class="bento-card-tag">Activity Heatmap</span>
+              </div>
+              <div class="bento-card-subtitle" id="heatmapHoverDateHint">悬浮格子查看当日详情</div>
+            </div>
+            <div class="heatmap-body-wrapper">
+              <div class="heatmap-grid-scroll">
+                <div class="heatmap-grid-layout">
+                  <div class="heatmap-day-labels">
+                    <span>周一</span>
+                    <span>周三</span>
+                    <span>周五</span>
+                    <span>周日</span>
+                  </div>
+                  <div class="heatmap-grid-container" id="heatmapGridContainer">
+                    <!-- 13列 x 7行格子由 JS 动态渲染 -->
+                  </div>
+                </div>
+                <div class="heatmap-legend-bar">
+                  <span class="legend-text">少</span>
+                  <span class="heatmap-cell level-0 mini"></span>
+                  <span class="heatmap-cell level-1 mini"></span>
+                  <span class="heatmap-cell level-2 mini"></span>
+                  <span class="heatmap-cell level-3 mini"></span>
+                  <span class="heatmap-cell level-4 mini"></span>
+                  <span class="legend-text">多</span>
+                </div>
+              </div>
+              <div class="heatmap-stats-sidebar">
+                <div class="heatmap-stat-main">
+                  <div class="heatmap-big-number" id="heatmapTotalRangeTokens">0</div>
+                  <div class="heatmap-big-label">91天累计 Tokens</div>
+                  <div class="heatmap-cost-text" id="heatmapRangeCostText">~$0.00</div>
+                </div>
+                <div class="heatmap-meta-list">
+                  <div class="heatmap-meta-item">
+                    <span class="meta-label">活跃天数</span>
+                    <span class="meta-val" id="heatmapActiveDays">0 天</span>
+                  </div>
+                  <div class="heatmap-meta-item">
+                    <span class="meta-label">连续活跃 (Streak)</span>
+                    <span class="meta-val" id="heatmapStreakDays">0 天</span>
+                  </div>
+                  <div class="heatmap-meta-item">
+                    <span class="meta-label">峰值消耗日</span>
+                    <span class="meta-val" id="heatmapBusiestDay">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子看板 2：【请求日志】全链路请求流水明细表格 -->
+        <div id="subpanelTraffic" class="telemetry-subpanel hidden">
+          <!-- 筛选与搜索工具条 -->
+          <div class="traffic-filter-bar">
+            <div class="traffic-search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="trafficSearchInput" placeholder="搜索模型、端点、账号、状态码..." />
+              <button id="btnTrafficClearSearch" class="btn-clear-search hidden">&times;</button>
+            </div>
+
+            <div class="traffic-filters-group">
+              <div class="traffic-filter-chips" id="trafficStatusFilters">
+                <button class="filter-chip active" data-status="">全部状态</button>
+                <button class="filter-chip" data-status="200">🟢 完成 (DONE)</button>
+                <button class="filter-chip" data-status="err">🔴 异常 (ERROR)</button>
+              </div>
+
+              <div class="traffic-filter-chips" id="trafficProtoFilters">
+                <button class="filter-chip active" data-proto="">全部操作</button>
+                <button class="filter-chip" data-proto="run_command">💻 命令行</button>
+                <button class="filter-chip" data-proto="file">📁 文件读写</button>
+                <button class="filter-chip" data-proto="assistant_reply">💬 推理回复</button>
+                <button class="filter-chip" data-proto="mcp">🔌 MCP工具</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 全链路日志数据表格 -->
+          <div class="traffic-table-wrapper">
+            <table class="traffic-table" id="trafficTable">
+              <thead>
+                <tr>
+                  <th style="width: 76px;">状态</th>
+                  <th style="min-width: 200px;">会话步骤 / 工具操作</th>
+                  <th style="min-width: 140px;">模型与思考档位</th>
+                  <th style="min-width: 120px;">执行账号</th>
+                  <th style="min-width: 140px;">Token 消耗</th>
+                  <th style="width: 90px;">耗时</th>
+                  <th style="width: 90px;">时间</th>
+                </tr>
+              </thead>
+              <tbody id="trafficTableBody">
+                <!-- JS 动态渲染表格行 -->
+              </tbody>
+            </table>
+            <div id="trafficEmptyNotice" class="traffic-empty-notice hidden">
+              <span class="empty-icon">📭</span>
+              <span>暂无符合筛选条件的流量日志</span>
+            </div>
+
+            <!-- 分页栏 (cc-switch 高性能分页) -->
+            <div id="trafficPaginationBar" class="traffic-pagination-bar">
+              <div class="pagination-info">
+                <span>共 <strong id="trafficTotalCount">0</strong> 条记录</span>
+                <span class="pagination-divider">·</span>
+                <span>第 <strong id="trafficCurrentPage">1</strong> / <strong id="trafficTotalPages">1</strong> 页</span>
+              </div>
+              <div class="pagination-controls">
+                <button id="btnTrafficFirstPage" class="btn-page" title="首页">⏮ 首页</button>
+                <button id="btnTrafficPrevPage" class="btn-page" title="上一页">◀ 上一页</button>
+                <span class="page-indicator" id="trafficPageIndicator">1</span>
+                <button id="btnTrafficNextPage" class="btn-page" title="下一页">下一页 ▶</button>
+                <button id="btnTrafficLastPage" class="btn-page" title="末页">末页 ⏭</button>
+                <select id="trafficPageSizeSelect" class="page-size-select" title="每页条数">
+                  <option value="30">30 条/页</option>
+                  <option value="50" selected>50 条/页</option>
+                  <option value="100">100 条/页</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 子看板 3：【执行步骤】会话执行明细步骤 -->
+        <div id="subpanelTimeline" class="telemetry-subpanel hidden">
+          <div class="stream-toolbar">
+            <div class="timeline-filter-chips" id="timelineFilterChips">
+              <button class="filter-chip active" data-filter="all">全部</button>
+              <button class="filter-chip" data-filter="user">👤 用户输入</button>
+              <button class="filter-chip" data-filter="tool">⚡ 工具执行</button>
+              <button class="filter-chip" data-filter="assistant">🤖 思考与回复</button>
+            </div>
             <span id="timelineStatsInfo" class="stream-subtext">0 步 · 0 次调用</span>
           </div>
-          <label class="compact-switch">
-            <input type="checkbox" id="autoRefreshTimeline" checked>
-            <span class="switch-slider"></span>
-            <span class="switch-label">自动刷新 (3s)</span>
-          </label>
-        </div>
 
-        <div id="timelineContainer" class="timeline-stream">
-          <div class="empty-placeholder">正在加载会话执行流水...</div>
+          <!-- 保留兼容隐藏 ID -->
+          <div style="display:none;">
+            <span id="statTokenTotal"></span>
+            <span id="statTokenCache"></span>
+            <span id="statTokenInput"></span>
+            <span id="statTokenOutput"></span>
+            <span id="trafficStatReasoning"></span>
+            <span id="trafficStatReasoningHint"></span>
+            <span id="statTokensBreakdown"></span>
+            <span id="topModelsList"></span>
+          </div>
+
+          <div id="timelineContainer" class="timeline-stream">
+            <div class="empty-placeholder">正在加载会话执行流水...</div>
+          </div>
         </div>
       </section>
 
@@ -202,46 +567,60 @@
         </div>
       </section>
 
-      <!-- 视图 3：微信与飞书研发网关 -->
+      <!-- 视图 3：微信与飞书研发网关 (精简沉浸式多端消息中心) -->
       <section id="tab-wechat" class="view-panel">
-        <div class="wechat-hero-card">
-          <div class="hero-left">
-            <div class="hero-title">📱 微信 & 🐦 飞书双端研发网关</div>
-            <div class="hero-desc">支持微信公众号/CoW 与飞书群机器人 Webhook / 开放平台事件双向接入，发送 <code>/task 编写单元测试</code> 自动录入看板；发送 <code>/status</code> 查询实时进度。</div>
+        <!-- 紧凑顶部状态与操作栏 (高仅 34px) -->
+        <div class="wechat-stream-topbar">
+          <div class="topbar-left">
+            <span class="topbar-title">📱 微信 & 🐦 飞书多端消息流</span>
+            <span id="wechatStreamStatusPill" class="status-pill status-online" style="font-size: 10px; padding: 1px 8px;">🟢 实时双向流</span>
           </div>
-          <div class="hero-badges">
-            <span class="hero-pill">网关端口: 18765</span>
-            <span class="hero-pill">微信连通</span>
-            <span class="hero-pill feishu-pill">飞书就绪</span>
+          <div class="topbar-right">
+            <button id="btnToggleFileDrawer" class="btn btn-secondary btn-xs" title="展开/收起远程文件直推微信抽屉">📤 直推文件</button>
+            <button id="btnClearWechatMsgs" class="btn btn-ghost btn-xs text-danger" title="清空所有微信与飞书历史消息">🧹 清空记录</button>
           </div>
         </div>
 
-        <div class="sim-card">
-          <div class="sim-header">
-            <span>🧪 多端消息联调与智能分类测试</span>
-            <div class="sim-source-toggle">
-              <label><input type="radio" name="simSource" value="wechat" checked> 📱 微信</label>
-              <label><input type="radio" name="simSource" value="feishu"> 🐦 飞书</label>
+        <!-- 轻量折叠抽屉：远程文件直推微信 (默认收起，点击右上角【直推文件】展开) -->
+        <div id="wechatFileDrawer" class="wechat-drawer-panel" style="display: none;">
+          <div class="drawer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="font-size: 11px; font-weight: 600; color: var(--cyan-glow); display: flex; align-items: center; gap: 6px;">
+              <span>📤 远程文件直推微信</span>
+              <span style="font-size: 10px; color: var(--text-muted); font-weight: normal;">(支持 .docx / .pdf / .xlsx / .zip / 源代码等)</span>
+            </div>
+            <button id="btnCloseFileDrawer" class="modal-close-btn" style="font-size: 14px; line-height: 1;">&times;</button>
+          </div>
+          <div class="sim-input-row" style="display: flex; gap: 6px; margin-bottom: 6px;">
+            <input type="text" id="sendFilePathInput" class="form-control" placeholder="输入电脑上的绝对路径，例如：D:\项目\说明书.docx" style="flex: 1; font-size: 11px; padding: 5px 8px;" />
+            <button id="btnSendFileToWechat" class="btn btn-primary btn-xs">📲 发送到微信</button>
+          </div>
+          <div class="recent-files-section">
+            <div class="recent-files-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 10.5px; color: var(--text-muted);">
+              <span>近期项目可发文档：</span>
+              <button id="btnRefreshRecentFiles" class="btn btn-ghost btn-xs" style="font-size: 10px; padding: 1px 5px;">🔄 刷新</button>
+            </div>
+            <div id="recentFilesChips" class="recent-files-chips-row" style="max-height: 72px; overflow-y: auto;">
+              <span class="text-muted text-xs">正在扫描近期文件...</span>
             </div>
           </div>
-          <div class="sim-input-row">
-            <input type="text" id="simMsgInput" placeholder="输入模拟微信或飞书指令，例如：帮我在当前工程中写一个快速排序" />
-            <button id="btnSendSimulate" class="btn btn-primary btn-sm">发送模拟</button>
-          </div>
         </div>
 
-        <div class="inbox-header-row">
-          <span class="inbox-title">多端消息流动态</span>
+        <!-- 消息筛选栏与状态 -->
+        <div class="inbox-header-row" style="margin-top: 4px; margin-bottom: 8px;">
           <div class="inbox-filters">
             <button class="filter-chip active" data-filter="all">全部</button>
             <button class="filter-chip" data-filter="project_task">🚀 任务</button>
+            <button class="filter-chip" data-filter="file_transfer">📄 文件</button>
             <button class="filter-chip" data-filter="feishu">🐦 飞书</button>
             <button class="filter-chip" data-filter="daily_qa">💬 问答</button>
-            <button id="btnClearWechatMsgs" class="btn btn-ghost btn-xs text-danger" title="清空全部历史消息">🧹 清空全部</button>
+          </div>
+          <div style="font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px;">
+            <span>网关端口: <strong>18765</strong></span>
           </div>
         </div>
 
-        <div id="wechatMessagesList" class="wechat-messages">
+        <!-- 沉浸式消息流列表：全屏主视口 -->
+        <div id="wechatMessagesList" class="wechat-messages wechat-messages-fullscreen">
           <div class="empty-placeholder">暂无消息记录</div>
         </div>
       </section>
@@ -291,9 +670,9 @@
             <div class="settings-box-body">
               <div class="svc-status-grid">
                 <div class="svc-status-card">
-                  <div class="svc-card-title">🌐 HTTP API 与 Web 网关</div>
-                  <div class="svc-card-desc">端口: <strong id="svcApiPort">18765</strong> · 监听 <code>0.0.0.0</code></div>
-                  <div class="svc-card-status"><span class="badge-dot dot-green"></span> <span id="svcApiStatus">正常监听中</span></div>
+                  <div class="svc-card-title">🌐 HTTP API 与 Web 独立端</div>
+                  <div class="svc-card-desc">端口: <strong id="svcApiPort">18765</strong> · <code>http://localhost:18765</code></div>
+                  <div class="svc-card-status"><span class="badge-dot dot-gray" id="svcApiDot"></span> <span id="svcApiStatus">未启动 (默认关闭)</span></div>
                 </div>
                 <div class="svc-status-card">
                   <div class="svc-card-title">📱 微信随身端自动化服务</div>
@@ -307,7 +686,42 @@
                 </div>
               </div>
 
+              <div class="svc-watchdog-info-line" style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 7px 12px; background: rgba(56, 189, 248, 0.07); border: 1px solid rgba(56, 189, 248, 0.22); border-radius: var(--radius-sm); font-size: 11px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge-dot dot-green" id="svcWatchdogDot"></span>
+                  <span style="color: var(--text-secondary);">随身端守护巡检: <strong id="svcWatchdogStatusText" style="color: var(--cyan-glow);">每 10 秒巡检守护中 (断开自动自愈拉起)</strong></span>
+                </div>
+                <div style="color: var(--text-muted); font-size: 10px;">
+                  最近巡检: <span id="svcWatchdogLastCheckTime" style="color: #fff; font-family: monospace;">刚刚</span>
+                </div>
+              </div>
+
+              <!-- 独立 Web 端网页服务启动控制 -->
+              <div class="svc-webserver-bar" style="margin-top: 12px; padding: 10px 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 4px; max-width: 60%;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-weight: 600; font-size: 12px; color: var(--text-primary);">🌐 独立 Web 端网页服务</span>
+                    <span id="svcWebRunningTag" class="status-pill status-offline" style="font-size: 10px; padding: 1px 7px;">已停止</span>
+                  </div>
+                  <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+                    默认关闭以节约资源。IDE 内置面板直接调用本地进程无须开启此项；若需在外部浏览器（Chrome/Edge）独立使用或局域网访问，可在此一键启动。
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button id="btnToggleWebServer" type="button" class="btn btn-primary btn-xs">🚀 启动 Web 端网页服务</button>
+                  <button id="btnOpenWebBrowser" type="button" class="btn btn-secondary btn-xs" style="display: none;">🌐 在浏览器中打开</button>
+                </div>
+              </div>
+
               <div class="form-row checkbox-row" style="margin-top: 10px;">
+                <label class="compact-switch">
+                  <input type="checkbox" id="cfgEnableWebServer">
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">随插件自启独立 Web 端网页服务 (默认关闭)</span>
+                </label>
+              </div>
+
+              <div class="form-row checkbox-row" style="margin-top: 6px;">
                 <label class="compact-switch">
                   <input type="checkbox" id="cfgAutoStartWechatBot" checked>
                   <span class="switch-slider"></span>
@@ -316,7 +730,8 @@
               </div>
 
               <div class="svc-actions-row">
-                <button id="btnRunDiagnosis" class="btn btn-primary btn-xs">🧪 运行自检与容错诊断</button>
+                <button id="btnCheckWechatBotStatus" class="btn btn-primary btn-xs">🔍 检测随身端是否拉起 (断开自动启动)</button>
+                <button id="btnRunDiagnosis" class="btn btn-secondary btn-xs">🧪 运行自检与容错诊断</button>
                 <button id="btnRestartWechatBot" class="btn btn-secondary btn-xs">🔄 重启微信机器人</button>
                 <button id="btnToggleBotLogs" class="btn btn-ghost btn-xs">📋 展开随身端实时日志</button>
               </div>
@@ -672,6 +1087,145 @@
             </div>
           </div>
 
+          <!-- 自动化研发晨报与夕报 -->
+          <div class="settings-box" data-module="daily-report">
+            <div class="settings-box-header">
+              <div class="settings-box-header-left">
+                <span class="box-collapse-icon">▾</span>
+                <span class="box-title" style="margin-bottom: 0;">⏰ 自动化研发晨报与夕报 (Daily Standup)</span>
+              </div>
+              <div class="settings-box-header-right"></div>
+            </div>
+            <div class="settings-box-body">
+              <div class="form-row checkbox-row">
+                <label class="compact-switch">
+                  <input type="checkbox" id="cfgEnableDailyReports" checked>
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">开启每日定时自动生成晨报与夕报推送</span>
+                </label>
+              </div>
+              <div class="form-row">
+                <label>晨报推送时间</label>
+                <input type="time" id="cfgMorningReportTime" value="09:00" />
+                <div class="form-hint" style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">每日汇总今日看板待办、活跃分支与高优攻坚事项</div>
+              </div>
+              <div class="form-row">
+                <label>夕报推送时间</label>
+                <input type="time" id="cfgEveningReportTime" value="19:00" />
+                <div class="form-hint" style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">每日汇总今日交付成果、执行步数与 Token 资源消耗</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 多人权限白名单与高危指令安全防护 -->
+          <div class="settings-box" data-module="rbac-security">
+            <div class="settings-box-header">
+              <div class="settings-box-header-left">
+                <span class="box-collapse-icon">▾</span>
+                <span class="box-title" style="margin-bottom: 0;">🛡️ 多人权限白名单与高危指令安全守卫</span>
+              </div>
+              <div class="settings-box-header-right"></div>
+            </div>
+            <div class="settings-box-body">
+              <div class="form-row checkbox-row">
+                <label class="compact-switch">
+                  <input type="checkbox" id="cfgEnableRbac" checked>
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">开启基于微信账号的多人权限白名单控制</span>
+                </label>
+              </div>
+              <div class="form-row">
+                <label>管理员账号名单 (Admin IDs)</label>
+                <input type="text" id="cfgAdminUsers" placeholder="微信号或微信ID，英文逗号分隔" value="o9cq804UMGEs0EjeeWT1b2XFIJ5s@im.wechat" />
+                <div class="form-hint" style="color: var(--text-muted); font-size: 10px; margin-top: 2px;">拥有全部工程改动、服务重启与打包权限的管理员</div>
+              </div>
+              <div class="form-row">
+                <label>允许访问账号名单 (Allowed IDs)</label>
+                <input type="text" id="cfgAllowedUsers" placeholder="* 表示允许所有用户日常问答与任务派发" value="*" />
+              </div>
+              <div class="form-row checkbox-row">
+                <label class="compact-switch">
+                  <input type="checkbox" id="cfgEnableRiskyGuard" checked>
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">高危操作阻断并发送 4 位动态验证码确认（防误触）</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 电脑工程工作区漫游与切换 -->
+          <div class="settings-box" data-module="workspaces">
+            <div class="settings-box-header">
+              <div class="settings-box-header-left">
+                <span class="box-collapse-icon">▾</span>
+                <span class="box-title" style="margin-bottom: 0;">🌐 电脑工程工作区漫游管理 (Workspaces)</span>
+              </div>
+              <div class="settings-box-header-right">
+                <button type="button" id="btnRefreshWorkspacesList" class="btn btn-ghost btn-xs">🔄 刷新工作区</button>
+              </div>
+            </div>
+            <div class="settings-box-body">
+              <div class="form-hint" style="margin-bottom: 8px; color: var(--text-muted); font-size: 11px;">
+                系统已扫描电脑上已登记的工程目录。在手机端可直接发送 <code>/workspaces</code> 或 <code>/cd 序号</code> 随时切换：
+              </div>
+              <div id="workspacesListContainer" class="workspaces-list">
+                <div class="empty-placeholder">正在扫描本地工作区...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 十项全能移动端与本地敏捷研发中枢 -->
+          <div class="settings-box full-width-box" data-module="mobile-devops">
+            <div class="settings-box-header">
+              <div class="settings-box-header-left">
+                <span class="box-collapse-icon">▾</span>
+                <span class="box-title" style="margin-bottom: 0;">🚀 十项全能移动研发敏捷中枢 (DevOps 一键直达)</span>
+              </div>
+              <div class="settings-box-header-right">
+                <span class="hero-pill" style="color: var(--cyan-glow); border-color: rgba(56, 189, 248, 0.35); background: rgba(56, 189, 248, 0.1);">微信端 / 网页端双通</span>
+              </div>
+            </div>
+            <div class="settings-box-body">
+              <div class="form-hint" style="margin-bottom: 8px; color: var(--text-muted); font-size: 11px;">
+                可在网页端一键执行常用研发运维指令并自动回推微信，亦可在手机微信中直接发送对应的斜杠指令（如 <code>/diff</code>、<code>/service</code> 等）。
+              </div>
+              <div class="devops-actions-grid" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button id="btnQuickUiSnapshot" class="btn btn-secondary btn-xs" title="捕获当前界面并推送至微信">🖼️ 界面快照推微信</button>
+                <button id="btnQuickBuildPackage" class="btn btn-secondary btn-xs" title="自动打包当前项目制品并推微信">📦 项目打包推微信</button>
+                <button id="btnQuickGitDiff" class="btn btn-secondary btn-xs" title="查看当前工程 Git Diff 审查摘要">📑 Git Diff 审查 (/diff)</button>
+                <button id="btnQuickServiceStatus" class="btn btn-secondary btn-xs" title="检测本地开发端口运行情况">⚡ 开发服务检测 (/service)</button>
+                <button id="btnQuickMorningReport" class="btn btn-ghost btn-xs" title="即时测试生成研发晨报">🌅 生成晨报 (/morning)</button>
+                <button id="btnQuickEveningReport" class="btn btn-ghost btn-xs" title="即时测试生成研发夕报">🌆 生成夕报 (/evening)</button>
+              </div>
+              <div id="quickOpsResultNotice" style="display: none; margin-top: 8px; font-size: 10.5px; padding: 6px 10px; border-radius: 4px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; white-space: pre-wrap;"></div>
+            </div>
+          </div>
+
+          <!-- 多端消息联调与智能分类测试 -->
+          <div class="settings-box full-width-box" data-module="message-debugger">
+            <div class="settings-box-header">
+              <div class="settings-box-header-left">
+                <span class="box-collapse-icon">▾</span>
+                <span class="box-title" style="margin-bottom: 0;">🧪 多端消息联调与智能分类测试 (Mock 模拟器)</span>
+              </div>
+              <div class="settings-box-header-right">
+                <div class="sim-source-toggle" style="font-size: 11px; display: flex; gap: 8px;">
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 3px;"><input type="radio" name="simSource" value="wechat" checked> 📱 微信</label>
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 3px;"><input type="radio" name="simSource" value="feishu"> 🐦 飞书</label>
+                </div>
+              </div>
+            </div>
+            <div class="settings-box-body">
+              <div class="form-hint" style="margin-bottom: 8px; color: var(--text-muted); font-size: 11px;">
+                用于开发者在无手机环境下的单元联调测试。输入指令后将模拟微信/飞书用户下发任务，并触发智能意图分类与工作流执行。
+              </div>
+              <div class="sim-input-row" style="display: flex; gap: 6px;">
+                <input type="text" id="simMsgInput" class="form-control" placeholder="输入模拟指令，例如：帮我在当前工程中写一个快速排序" style="flex: 1; font-size: 11px; padding: 5px 8px;" />
+                <button id="btnSendSimulate" class="btn btn-primary btn-xs">🚀 发送模拟</button>
+              </div>
+            </div>
+          </div>
+
           <div class="settings-save-bar">
             <button id="btnSaveConfig" class="btn btn-primary btn-sm">保存全部配置</button>
             <span id="saveResultHint" class="save-toast"></span>
@@ -710,6 +1264,7 @@
           </div>
         </div>
         <div class="modal-foot">
+          <button id="btnCancelTaskModal" class="btn btn-ghost btn-sm" type="button">取消</button>
           <button id="btnSubmitTask" class="btn btn-primary btn-sm">确认创建</button>
         </div>
       </div>
@@ -729,6 +1284,7 @@
           </div>
         </div>
         <div class="modal-foot">
+          <button id="btnCancelMilestoneModal" class="btn btn-ghost btn-sm" type="button">取消</button>
           <button id="btnSubmitMilestone" class="btn btn-primary btn-sm">确认创建</button>
         </div>
       </div>
@@ -773,6 +1329,7 @@
           </div>
         </div>
         <div class="modal-foot">
+          <button id="btnCancelEditTaskModal" class="btn btn-ghost btn-sm" type="button">取消</button>
           <button id="btnSubmitEditTask" class="btn btn-primary btn-sm">保存修改</button>
         </div>
       </div>
@@ -819,10 +1376,345 @@
       </div>
     </div>
 
-    <!-- Toast 通知容器 -->
+    <!-- 弹窗：新建/登记研发工程 -->
+    <div id="modalNewProject" class="modal-backdrop hidden">
+      <div class="modal-dialog" style="max-width: 380px;">
+        <div class="modal-head">
+          <span class="modal-dialog-title">📦 新建 / 登记研发工程</span>
+          <button class="modal-close-btn" id="btnCloseNewProjectModal">&times;</button>
+        </div>
+        <div class="modal-body-content" style="padding: 12px 14px;">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label" style="font-size: 11px; margin-bottom: 4px; display: block; color: var(--text-muted);">工程名称 <span style="color:var(--text-danger)">*</span></label>
+            <input type="text" id="inputNewProjectName" class="form-control" placeholder="如: combat-concept-ai-workbench" style="width: 100%; font-size: 12px; padding: 6px 8px;">
+          </div>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label" style="font-size: 11px; margin-bottom: 4px; display: block; color: var(--text-muted);">本地目录路径 (可选，留空自动生成)</label>
+            <input type="text" id="inputNewProjectPath" class="form-control" placeholder="如: D:\项目\combat-concept-ai-workbench" style="width: 100%; font-size: 12px; padding: 6px 8px;">
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); line-height: 1.5; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px;">
+            💡 创建后将自动建立本地文件夹并在系统中登记，工作台将立即聚焦到该工程。
+          </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;padding:8px 14px;">
+          <button id="btnCancelNewProject" class="btn btn-ghost btn-xs">取消</button>
+          <button id="btnSubmitNewProject" class="btn btn-primary btn-xs">🚀 立即创建</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹窗：创建新会话 / 通用独立会话 -->
+    <div id="modalNewSession" class="modal-backdrop hidden">
+      <div class="modal-dialog" style="max-width: 400px;">
+        <div class="modal-head">
+          <span class="modal-dialog-title">➕ 启动新研发会话</span>
+          <button class="modal-close-btn" id="btnCloseNewSessionModal">&times;</button>
+        </div>
+        <div class="modal-body-content" style="padding: 12px 14px;">
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label" style="font-size: 11px; margin-bottom: 4px; display: block; color: var(--text-muted);">会话类型与归属</label>
+            <select id="selectNewSessionScope" class="form-control" style="width: 100%; font-size: 12px; padding: 6px 8px;">
+              <option value="project">📌 归属于当前聚焦工程</option>
+              <option value="global">🌐 全局独立会话 (不归属于任何特定工程)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label class="form-label" style="font-size: 11px; margin-bottom: 4px; display: block; color: var(--text-muted);">初始任务 / 需求说明</label>
+            <textarea id="inputNewSessionPrompt" class="form-control" rows="3" placeholder="输入开启新会话的第一项任务或探索问题..." style="width: 100%; font-size: 12px; padding: 6px 8px; resize: vertical;"></textarea>
+          </div>
+        </div>
+        <div class="modal-foot" style="display:flex;justify-content:flex-end;gap:8px;padding:8px 14px;">
+          <button id="btnCancelNewSession" class="btn btn-ghost btn-xs">取消</button>
+          <button id="btnSubmitNewSession" class="btn btn-primary btn-xs">🚀 立即开启</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹窗：流量调用详情抽屉 (支持常规弹窗/全屏聚焦模式) -->
+    <!-- 图一：请求日志报文对比与诊断模态框 (Antigravity-Manager 1:1 克隆，增强响应式) -->
+    <div id="modalTrafficDetail" class="modal-backdrop traffic-modal-backdrop hidden">
+      <div class="modal-dialog traffic-diff-modal-dialog">
+        <!-- 顶部 Header 状态行 -->
+        <div class="traffic-diff-header">
+          <div class="traffic-diff-header-left">
+            <span id="trafficDiffStatusBadge" class="traffic-status-badge badge-200">200</span>
+            <span class="traffic-diff-method" id="trafficDiffMethod">POST</span>
+            <span class="traffic-diff-endpoint" id="trafficDiffEndpoint">/v1/chat/completions</span>
+          </div>
+          <div class="traffic-diff-header-actions">
+            <button class="btn-diff-header-tool" id="btnDiffToKanbanBug" title="一键将当前步骤/报错转为看板待办 Bug 任务">
+              <span>📌 转为待办</span>
+            </button>
+            <button class="btn-diff-header-tool" id="btnToggleTrafficMaximize" title="切换全屏/窗口视图">
+              <span id="iconTrafficMaximize">⛶</span>
+            </button>
+            <button class="traffic-diff-close-btn" id="btnCloseTrafficModal" title="关闭报文查看器">&times;</button>
+          </div>
+        </div>
+
+        <!-- 元数据网格卡片 -->
+        <div class="traffic-meta-banner" id="trafficMetaBanner">
+          <div class="traffic-meta-item">
+            <span class="meta-title">请求时间</span>
+            <span class="meta-value" id="trafficMetaTime">2026/10/26 12:52:17</span>
+          </div>
+          <div class="traffic-meta-item">
+            <span class="meta-title">耗时</span>
+            <span class="meta-value" id="trafficMetaLatency">14450ms</span>
+          </div>
+          <div class="traffic-meta-item">
+            <span class="meta-title">TOKEN 消耗 (输入/输出)</span>
+            <div class="meta-tokens-row" id="trafficMetaTokens">
+              <span class="meta-pill pill-in" id="trafficMetaTokenIn">In: 5.3k</span>
+              <span class="meta-pill pill-out" id="trafficMetaTokenOut">Out: 1.1k</span>
+            </div>
+          </div>
+          <div class="traffic-meta-item">
+            <span class="meta-title">执行动作</span>
+            <span class="meta-proto-badge" id="trafficMetaProto">ANTIGRAVITY</span>
+          </div>
+          <div class="traffic-meta-item">
+            <span class="meta-title">使用模型</span>
+            <span class="meta-model-text" id="trafficMetaModel">Gemini 3.8 Flash (Medium)</span>
+          </div>
+          <div class="traffic-meta-item">
+            <span class="meta-title">执行账号</span>
+            <span class="meta-account-text" id="trafficMetaAccount">xyqlh6867@gmail.com</span>
+          </div>
+        </div>
+
+        <!-- 模式工具栏与操作条 -->
+        <div class="traffic-diff-toolbar">
+          <div class="diff-tools-left">
+            <!-- 布局模式切换 -->
+            <div class="diff-seg-group" id="diffLayoutGroup">
+              <button class="diff-seg-btn active" data-layout="three-column">
+                <span class="diff-icon">⚏</span>
+                <span>三栏全景</span>
+              </button>
+              <button class="diff-seg-btn" data-layout="postman">
+                <span class="diff-icon">🗔</span>
+                <span>单栏聚焦</span>
+              </button>
+            </div>
+            <!-- 深度模式切换 -->
+            <div class="diff-seg-group" id="diffModeGroup">
+              <button class="diff-seg-btn active" data-mode="brief">
+                <span class="diff-icon">🪄</span>
+                <span>结构视图</span>
+              </button>
+              <button class="diff-seg-btn" data-mode="full">
+                <span class="diff-icon">📄</span>
+                <span>原始视图</span>
+              </button>
+            </div>
+            <!-- 模式说明提示语 -->
+            <span class="diff-mode-tip">Antigravity 本地 Agent 任务步骤审计，直连本地 transcript.jsonl，杜绝中转站伪造格式</span>
+          </div>
+          <div class="diff-tools-right">
+            <!-- 导出/复制 下拉操作 -->
+            <div class="diff-action-dropdown">
+              <button id="btnDiffExportCopy" class="btn-diff-action">
+                <span>📥 导出 / 复制</span>
+                <span class="dropdown-caret">⌄</span>
+              </button>
+              <div id="diffExportDropdownMenu" class="diff-dropdown-menu hidden">
+                <button class="dropdown-item" id="btnCopyUserPrompt">💬 复制用户请求指令</button>
+                <button class="dropdown-item" id="btnCopyToolArgs">🛠️ 复制工具调用入参 (JSON)</button>
+                <button class="dropdown-item" id="btnCopyFullTranscript">📄 复制本地完整日志 (Raw JSON)</button>
+                <button class="dropdown-item" id="btnExportFullJson">💾 导出步骤诊断文件 (.json)</button>
+              </div>
+            </div>
+            <!-- 折叠元数据按钮 -->
+            <button id="btnToggleMetaBanner" class="btn-diff-action text-btn">
+              <span id="btnToggleMetaIcon">收起元数据</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 核心内容区：三栏对比模式 (Three-column View) -->
+        <div id="diffThreeColumnView" class="diff-columns-grid">
+          <!-- 第 1 栏：USER_REQUEST 用户请求 -->
+          <div class="diff-pane diff-pane-request">
+            <div class="diff-pane-head">
+              <div class="diff-pane-title-group">
+                <span class="diff-tag-pill tag-request">USER_PROMPT</span>
+                <span class="diff-pane-title">用户指令 / 上下文提示</span>
+              </div>
+              <button class="btn-pane-copy" id="btnCopyPaneRequest" title="复制用户指令">📋 复制</button>
+            </div>
+            <div class="diff-pane-controls">
+              <div class="diff-search-input-box">
+                <input type="text" id="diffSearchRequest" placeholder="搜索用户指令..." />
+                <button class="btn-control-toggle" id="btnCaseRequest" title="区分大小写">Aa</button>
+                <button class="btn-control-toggle active" id="btnWrapRequest" title="自动折行">折行</button>
+              </div>
+            </div>
+            <div class="diff-headers-accordion">
+              <div class="accordion-head" id="headReqAccordion">
+                <span class="accordion-title">会话上下文 (SESSION INFO) (<span id="reqHeadersCount">3</span> 项)</span>
+                <div class="accordion-actions">
+                  <button class="btn-accordion-copy" id="btnCopyReqHeaders">复制</button>
+                  <span class="accordion-arrow" id="arrowReqHeaders">展开 ⌄</span>
+                </div>
+              </div>
+              <div class="accordion-body hidden" id="bodyReqHeaders">
+                <pre class="headers-pre" id="preReqHeaders"></pre>
+              </div>
+            </div>
+            <div class="diff-code-wrapper" id="wrapCodeRequest">
+              <div class="diff-code-lines" id="linesRequest"></div>
+              <pre class="diff-code-content" id="contentRequest"></pre>
+            </div>
+          </div>
+
+          <!-- 第 2 栏：TOOL_ACTION 工具调用与执行入参 -->
+          <div class="diff-pane diff-pane-forwarded">
+            <div class="diff-pane-head">
+              <div class="diff-pane-title-group">
+                <span class="diff-tag-pill tag-forwarded">TOOL_ACTION</span>
+                <span class="diff-pane-title">工具调度与参数 (Tool Calls)</span>
+              </div>
+              <button class="btn-pane-copy" id="btnCopyPaneForwarded" title="复制工具入参">📋 复制</button>
+            </div>
+            <div class="diff-pane-controls">
+              <div class="diff-search-input-box">
+                <input type="text" id="diffSearchForwarded" placeholder="搜索参数内容..." />
+                <button class="btn-control-toggle" id="btnCaseForwarded" title="区分大小写">Aa</button>
+                <button class="btn-control-toggle active" id="btnWrapForwarded" title="自动折行">折行</button>
+              </div>
+            </div>
+            <div class="diff-headers-accordion">
+              <div class="accordion-head" id="headFwdAccordion">
+                <span class="accordion-title">动作摘要与状态 (ACTION INFO) (<span id="fwdHeadersCount">4</span> 项)</span>
+                <div class="accordion-actions">
+                  <button class="btn-accordion-copy" id="btnCopyFwdHeaders">复制</button>
+                  <span class="accordion-arrow" id="arrowFwdHeaders">展开 ⌄</span>
+                </div>
+              </div>
+              <div class="accordion-body hidden" id="bodyFwdHeaders">
+                <pre class="headers-pre" id="preFwdHeaders"></pre>
+              </div>
+            </div>
+            <div class="diff-code-wrapper" id="wrapCodeForwarded">
+              <div class="diff-code-lines" id="linesForwarded"></div>
+              <pre class="diff-code-content" id="contentForwarded"></pre>
+            </div>
+          </div>
+
+          <!-- 第 3 栏：TRANSCRIPT 本地原始记录 -->
+          <div class="diff-pane diff-pane-response">
+            <div class="diff-pane-head">
+              <div class="diff-pane-title-group">
+                <span class="diff-tag-pill tag-response">TRANSCRIPT</span>
+                <span class="diff-pane-title">本地原始记录 (.jsonl)</span>
+              </div>
+              <button class="btn-pane-copy" id="btnCopyPaneResponse" title="复制本地原始 JSON">📋 复制</button>
+            </div>
+            <div class="diff-pane-controls">
+              <div class="diff-search-input-box">
+                <input type="text" id="diffSearchResponse" placeholder="搜索原始记录..." />
+                <button class="btn-control-toggle" id="btnCaseResponse" title="区分大小写">Aa</button>
+                <button class="btn-control-toggle active" id="btnWrapResponse" title="自动折行">折行</button>
+              </div>
+            </div>
+            <!-- 耗时分类诊断卡片 (完全对标图一) -->
+            <div class="diff-latency-diagnostic-card" id="diffLatencyDiagnostic">
+              <div class="diag-left">
+                <span class="diag-icon">⏱️</span>
+                <span class="diag-title">耗时分类诊断</span>
+                <span class="diag-total" id="diagTotalLatency">总耗时: 14.45s</span>
+              </div>
+              <div class="diag-right">
+                <button class="btn-diag-copy" id="btnCopyDiagTiming">复制 &gt;</button>
+              </div>
+            </div>
+            <div class="diff-headers-accordion">
+              <div class="accordion-head" id="headRespAccordion">
+                <span class="accordion-title">响应头 (HEADERS) (<span id="respHeadersCount">15</span> 行)</span>
+                <div class="accordion-actions">
+                  <button class="btn-accordion-copy" id="btnCopyRespHeaders">复制</button>
+                  <span class="accordion-arrow" id="arrowRespHeaders">展开 ⌄</span>
+                </div>
+              </div>
+              <div class="accordion-body hidden" id="bodyRespHeaders">
+                <pre class="headers-pre" id="preRespHeaders"></pre>
+              </div>
+            </div>
+            <div class="diff-code-wrapper" id="wrapCodeResponse">
+              <div class="diff-code-lines" id="linesResponse"></div>
+              <pre class="diff-code-content" id="contentResponse"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Postman 风格单栏聚焦视图 (Single-Column Focus View) -->
+        <div id="diffPostmanView" class="diff-postman-container hidden">
+          <div class="postman-nav-tabs" id="postmanNavTabs">
+            <button class="postman-tab-btn active" data-tab="postman-req">👤 用户指令 (Request)</button>
+            <button class="postman-tab-btn" data-tab="postman-fwd">🛠️ 工具调度与参数 (Tool Calls)</button>
+            <button class="postman-tab-btn" data-tab="postman-resp">📄 本地原始记录 (Transcript)</button>
+            <button class="postman-tab-btn" data-tab="postman-timing">⏱️ Timing 耗时诊断</button>
+          </div>
+          <div class="postman-tab-content" id="postmanTabContent">
+            <!-- 由 JS 动态切换对应内容 -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模态框：AI 模型定价矩阵 (Pricing Matrix) -->
+    <div id="modalPricingMatrix" class="modal-backdrop hidden" style="z-index: 10005;">
+      <div class="modal-dialog pricing-matrix-dialog" style="max-width: 660px; width: 92%; background: #0f141c; border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85); overflow: hidden; display: flex; flex-direction: column;">
+        <div class="modal-head" style="padding: 12px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.02);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 15px;">📊</span>
+            <span class="modal-dialog-title" style="font-size: 13px; font-weight: 600; color: #f0f6fc;">模型定价矩阵与计费标准 (Pricing Matrix)</span>
+          </div>
+          <button class="modal-close-btn" id="btnClosePricingModal" title="关闭" style="background: transparent; border: none; color: #8b949e; font-size: 18px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <div class="modal-body-content" style="padding: 16px; max-height: 75vh; overflow-y: auto;">
+          <div style="font-size: 12px; color: #8b949e; margin-bottom: 14px; line-height: 1.5;">
+            当前网关调用预估支出与缓存节省以此标准进行动态核算。单位：<span style="color: #58a6ff; font-weight: 600;">美元 (USD) / 100万 Tokens (1M)</span>。
+          </div>
+
+          <div style="overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 16px; background: rgba(0, 0, 0, 0.2);">
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px; text-align: left;">
+              <thead>
+                <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #8b949e;">
+                  <th style="padding: 9px 12px; font-weight: 600;">模型型号</th>
+                  <th style="padding: 9px 12px; font-weight: 600;">输入 (Input / 1M)</th>
+                  <th style="padding: 9px 12px; font-weight: 600;">输出 (Output / 1M)</th>
+                  <th style="padding: 9px 12px; font-weight: 600;">缓存命中 (Cache / 1M)</th>
+                  <th style="padding: 9px 12px; font-weight: 600; text-align: right;">缓存节省率</th>
+                </tr>
+              </thead>
+              <tbody id="pricingMatrixTableBody">
+                <!-- 由 JS 动态渲染 -->
+              </tbody>
+            </table>
+          </div>
+
+          <div style="background: rgba(56, 189, 248, 0.06); border: 1px dashed rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 12px 14px; font-size: 11px; color: #cbd5e1; line-height: 1.6;">
+            <div style="font-weight: 600; color: #38bdf8; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>💡</span> 计费与节省计算公式说明
+            </div>
+            <div>• <strong style="color: #e6edf3;">预估支出</strong> = (输入Tokens × 输入单价 + 输出Tokens × 输出单价 + 缓存Tokens × 缓存单价) ÷ 1,000,000</div>
+            <div>• <strong style="color: #e6edf3;">缓存节省</strong> = 缓存命中Tokens × (输入单价 - 缓存单价) ÷ 1,000,000</div>
+            <div>• <strong style="color: #e6edf3;">思考推演</strong> (Thinking / Reasoning Tokens) 随输出统一按输出单价核算。</div>
+          </div>
+        </div>
+
+        <div class="modal-foot" style="display: flex; justify-content: flex-end; padding: 10px 16px; border-top: 1px solid rgba(255, 255, 255, 0.08); background: rgba(255, 255, 255, 0.01);">
+          <button id="btnConfirmPricingModal" class="btn btn-primary btn-sm" type="button" style="padding: 5px 16px; font-size: 12px;">关闭</button>
+        </div>
+      </div>
+    </div>
+
     <div id="toastNotification" class="toast-popup hidden"></div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=20261027_pricing_modal_v1"></script>
 </body>
 </html>

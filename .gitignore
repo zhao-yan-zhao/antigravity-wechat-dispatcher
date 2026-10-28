@@ -1,3 +1,7 @@
+# ============================================================================
+# .gitignore - WeChat Dispatcher & Telemetry Panel
+# ============================================================================
+
 # IDE & Code Analysis
 .codegraph/
 .idea/
@@ -10,11 +14,44 @@ yarn-debug.log*
 yarn-error.log*
 *.log
 
-# Databases & System
+# Databases & Runtime State
 *.sqlite
 *.db
+*.db-shm
+*.db-wal
+traffic_ledger.db
+
+# User Runtime Configurations & Data (Sensitive Credentials)
+data/*.json
+sidecars/panel/data/*.json
+!data/wechat_config.example.json
+!sidecars/panel/data/wechat_config.example.json
+wechat_config.json
+wechat_messages.json
+pending_confirmations.json
+oauth_creds.json
+*credentials*.json
+
+# Scratch & Dev Utilities
+scratch/
+sidecars/panel/scratch/
+test-all-commands.mjs
+test-unit-advanced.mjs
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+
+# Personal Docs & Reports
+*.docx
+*.pdf
+CodeReview_*.md
+
+# OS Artifacts
 .DS_Store
 Thumbs.db
-
-# Temp Files
 *.tmp
+*.bak
