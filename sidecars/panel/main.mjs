@@ -118,6 +118,15 @@ function loadConfig() {
 function saveConfig(cfg) {
   mkdirSync(DATA_DIR, { recursive: true });
   writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf8');
+
+  // 双向镜像同步保存到 wechat-dispatcher 与 ai-assistant 数据目录，确保两插件配置永不脱节
+  try {
+    const mirrorPlugin = DATA_DIR.includes('ai-assistant') ? 'wechat-dispatcher' : 'ai-assistant';
+    const mirrorDir = join(APP_DATA_DIR, 'sidecar_data', mirrorPlugin, 'panel', 'data');
+    mkdirSync(mirrorDir, { recursive: true });
+    writeFileSync(join(mirrorDir, 'wechat_config.json'), JSON.stringify(cfg, null, 2), 'utf8');
+  } catch (err) {}
+
   return cfg;
 }
 
@@ -4576,10 +4585,12 @@ function handleApiWechatMessageDelete(payload) {
 function handleApiWechatData() {
   const cfg = loadConfig();
   const safeCfg = { ...cfg };
-  if (safeCfg.llmApiKey) {
+  if (safeCfg.llmApiKey && safeCfg.llmApiKey !== 'local' && safeCfg.llmProvider !== 'antigravity-tools') {
     safeCfg.llmApiKeyMasked = safeCfg.llmApiKey.length > 8
       ? `${safeCfg.llmApiKey.slice(0, 4)}••••••••${safeCfg.llmApiKey.slice(-4)}`
       : '••••••••';
+  } else {
+    safeCfg.llmApiKeyMasked = '';
   }
   return {
     config: safeCfg,

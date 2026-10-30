@@ -3213,17 +3213,31 @@
         updateNotifyChannelVisibility();
       }
 
-      document.getElementById('cfgLlmProvider').value = cfg.llmProvider || 'deepseek';
-      document.getElementById('cfgLlmBaseUrl').value = cfg.llmBaseUrl || 'https://api.deepseek.com/v1';
-      document.getElementById('cfgLlmModel').value = cfg.llmModel || 'deepseek-chat';
+      document.getElementById('cfgLlmProvider').value = cfg.llmProvider || 'antigravity-tools';
+      document.getElementById('cfgLlmBaseUrl').value = cfg.llmBaseUrl || 'http://127.0.0.1:8045/v1';
+      document.getElementById('cfgLlmModel').value = cfg.llmModel || 'gemini-3.8-flash-high';
       document.getElementById('cfgSystemPrompt').value = cfg.systemPromptQA || '';
 
       const statusBadge = document.getElementById('apiKeyStatusBadge');
       const hintApiKey = document.getElementById('apiKeyMaskHint');
       const inputApiKey = document.getElementById('cfgLlmApiKey');
-      if (inputApiKey) inputApiKey.value = '';
+      const isLocal = (cfg.llmProvider === 'antigravity-tools');
 
-      if (cfg.llmApiKeyMasked) {
+      if (inputApiKey) {
+        inputApiKey.value = '';
+        inputApiKey.placeholder = isLocal ? '无需 Key (本地极速服务)' : 'sk-...';
+      }
+
+      if (isLocal) {
+        if (statusBadge) {
+          statusBadge.textContent = '免Key';
+          statusBadge.className = 'status-pill status-online';
+        }
+        if (hintApiKey) {
+          hintApiKey.textContent = '⚡ 使用本地 Antigravity Tools 极速服务 (8045端口)，无需配置 API Key';
+          hintApiKey.style.color = 'var(--cyan-glow, #38bdf8)';
+        }
+      } else if (cfg.llmApiKeyMasked) {
         if (statusBadge) {
           statusBadge.textContent = '已保存';
           statusBadge.className = 'status-pill status-online';
@@ -3233,19 +3247,13 @@
           hintApiKey.style.color = '#34d399';
         }
       } else {
-        const isLocal = (cfg.llmProvider === 'antigravity-tools');
         if (statusBadge) {
-          statusBadge.textContent = isLocal ? '免Key' : '未配置';
-          statusBadge.className = isLocal ? 'status-pill status-online' : 'status-pill status-idle';
+          statusBadge.textContent = '未配置';
+          statusBadge.className = 'status-pill status-idle';
         }
         if (hintApiKey) {
-          if (isLocal) {
-            hintApiKey.textContent = '⚡ 使用本地 Antigravity Tools 极速服务 (8045端口)，无需配置 API Key';
-            hintApiKey.style.color = 'var(--cyan-glow, #38bdf8)';
-          } else {
-            hintApiKey.textContent = 'ℹ️ 尚未配置 API Key。DeepSeek / OpenAI 请在上方输入 sk-... 密钥并点击保存';
-            hintApiKey.style.color = 'var(--text-muted, #94a3b8)';
-          }
+          hintApiKey.textContent = 'ℹ️ 尚未配置 API Key。DeepSeek / OpenAI 请在上方输入 sk-... 密钥并点击保存';
+          hintApiKey.style.color = 'var(--text-muted, #94a3b8)';
         }
       }
     } catch (e) {
