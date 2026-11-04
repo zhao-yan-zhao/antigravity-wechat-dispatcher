@@ -79,7 +79,7 @@
 ### 阶段九：多账号热插拔动态自适应与真实数据驱动 (1/1)
 
 - [x] **根治账号/模型硬编码，实现动态切号热自适应** `🔴高`
-  > 1. 彻底清除全工程所有写死账号（如 `xyqlh6867`）与静态模型；
+  > 1. 彻底清除全工程所有写死账号（如个人邮箱）与静态模型；
   > 2. 编写 `resolveCurrentAccount()` 与 `resolveCurrentModel()`：每次请求动态实时解析 Antigravity 宿主 `google_accounts.json`、OAuth JWT `id_token` 载荷与 `antigravity_state.pbtxt` / `transcript.jsonl`；
   > 3. 支持多账号热插拔：用户在 Antigravity 随时切换账号均能毫秒级动态自适应感知，确保数据 100% 真实；
   > 4. 修复前端语法异常导致的“一直在检测”卡死 Bug，全量通过语法校验。

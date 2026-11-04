@@ -4784,7 +4784,7 @@
 
       const modelReq = log.modelDisplay || 'Gemini 3.8 Flash (High)';
       const tierLabel = log.tierLabel || '高档 (High)';
-      const accountText = log.account || cachedTrafficAccount || 'xyqlh6867@gmail.com';
+      const accountText = log.account || cachedTrafficAccount || '默认账号';
 
       // 视觉层级强化：行类型指示色条
       let rowKind = 'tool';
@@ -5674,7 +5674,7 @@ TCP连接: ${t.tcpMs || 18}ms
     if (metaTokenOut) metaTokenOut.textContent = 'Out: ' + formatCompactNum(log.tokens?.output || 0);
     if (metaProto) metaProto.textContent = (log.protocol || 'ANTIGRAVITY').toUpperCase();
     if (metaModel) metaModel.textContent = `${log.modelDisplay || 'Gemini 3.8 Flash (High)'} [${log.tierLabel || '高档 (High)'}]`;
-    if (metaAccount) metaAccount.textContent = log.account || cachedTrafficAccount || 'xyqlh6867@gmail.com';
+    if (metaAccount) metaAccount.textContent = log.account || cachedTrafficAccount || '默认账号';
 
     // 3. 耗时
     const diagTotal = document.getElementById('diagTotalLatency');

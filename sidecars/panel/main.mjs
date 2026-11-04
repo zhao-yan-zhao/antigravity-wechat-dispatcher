@@ -57,7 +57,7 @@ const DEFAULT_CONFIG = {
   aiIntentConfirmTimeoutSec: 300,
   activeConversationId: '',
   pendingSwitchConvId: '',
-  currentProject: 'combat-concept-ai-workbench',
+  currentProject: 'default',
   waitForAgentReply: true,
   waitReplyTimeoutSec: 150,
   notifyChannel: 'none', // 'none' | 'wechat' | 'feishu' | 'pushplus' | 'wecom' | 'serverchan' | 'custom'
@@ -80,7 +80,7 @@ const DEFAULT_CONFIG = {
   enableDailyReports: true,
   morningReportTime: '09:00',
   eveningReportTime: '19:00',
-  adminUsers: ['o9cq804UMGEs0EjeeWT1b2XFIJ5s@im.wechat'],
+  adminUsers: [],
   allowedUsers: ['*'],
   enableRbac: true,
   enableRiskyGuard: true,
@@ -1596,9 +1596,6 @@ function getRecentProjectFiles(limit = 8) {
   const cwd = process.cwd();
   if (existsSync(cwd)) candidateDirs.add(cwd);
 
-  const combatDir = 'D:\\项目\\combat-concept-ai-workbench';
-  if (existsSync(combatDir)) candidateDirs.add(combatDir);
-
   const docExts = new Set([
     '.docx', '.doc', '.xlsx', '.xls', '.pptx', '.ppt', '.pdf',
     '.zip', '.tar', '.gz', '.7z', '.png', '.jpg', '.jpeg',
@@ -1869,10 +1866,6 @@ function resolveCurrentAccount() {
       }
     }
   } catch (e) {}
-
-  // 保证已知的常用账号在候选池中
-  discoveredAccounts.add('zhao20010722@gmail.com');
-  discoveredAccounts.add('xyqlh6867@gmail.com');
 
   // 默认当前账号：若无显式登录活动账号，默认保持为空字符串，禁止擅自伪造填充
   const all = Array.from(discoveredAccounts);
@@ -2696,8 +2689,8 @@ function scanGlobalAntigravityData() {
               modelRequest: resolveCurrentModel().requestModel,
               modelDisplay: resolveCurrentModel().displayName,
               modelActual: resolveCurrentModel().actualModel,
-              account: obj.author || (cid.startsWith('0c2ec05e') ? (sSteps >= 3620 ? 'zhao20010722@gmail.com' : 'xyqlh6867@gmail.com') : (cid.startsWith('82ddeff5') ? 'i.love.leo.wang.29@gmail.com' : '')) || currentAcc.email || '',
-              accountName: obj.author_name || (cid.startsWith('0c2ec05e') ? (sSteps >= 3620 ? 'zhao20010722' : 'xyqlh6867') : (cid.startsWith('82ddeff5') ? 'i.love.leo.wang.29' : '')) || currentAcc.name || '',
+              account: obj.author || currentAcc.email || '',
+              accountName: obj.author_name || currentAcc.name || '',
               tokens: {
                 input: inp,
                 output: out,

@@ -3,8 +3,10 @@ param(
   [switch]$Watch
 )
 
-$srcDir = "C:\Users\zhaoyan\.gemini\config\plugins\wechat-dispatcher\sidecars\panel"
-$dstDir = "C:\Users\zhaoyan\.gemini\config\plugins\ai-assistant\sidecars\panel"
+$homeDir = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
+$pluginsRoot = Join-Path $homeDir ".gemini\config\plugins"
+$srcDir = Join-Path $pluginsRoot "wechat-dispatcher\sidecars\panel"
+$dstDir = Join-Path $pluginsRoot "ai-assistant\sidecars\panel"
 
 function Sync-Files {
   Write-Host "[SYNC] 同步 sidecars/panel 目录..." -ForegroundColor Cyan

@@ -32,7 +32,7 @@ export class TrafficLedger {
           }
         }
       } catch {}
-      return { email: 'xyqlh6867@gmail.com', name: 'xyqlh6867' };
+      return { email: '', name: '未登录' };
     });
   }
 
@@ -335,23 +335,12 @@ export class TrafficLedger {
 
       const isDone = statusCode === 200;
 
-      // 账号识别：优先条目记录的 author，若未指定则依真实鉴权与会话归属分配
+      // 账号识别：优先条目记录的 author，若未指定则依真实鉴权分配
       let account = obj.author || '';
       let accountName = obj.author_name || '';
-      if (!account) {
-        if (convId.startsWith('0ea396ac') || convId.startsWith('b9adc47f')) {
-          account = 'zhao20010722@gmail.com';
-          accountName = 'zhao20010722';
-        } else if (convId.startsWith('82ddeff5')) {
-          account = 'i.love.leo.wang.29@gmail.com';
-          accountName = 'i.love.leo.wang.29';
-        } else if (currentAcc.email) {
-          account = currentAcc.email;
-          accountName = currentAcc.name || currentAcc.email.split('@')[0];
-        } else {
-          account = 'xyqlh6867@gmail.com';
-          accountName = 'xyqlh6867';
-        }
+      if (!account && currentAcc.email) {
+        account = currentAcc.email;
+        accountName = currentAcc.name || currentAcc.email.split('@')[0];
       }
 
       const eventId = `step:${convId.slice(0, 8)}:${sIdx}`;
