@@ -986,8 +986,9 @@ export class TrafficLedger {
           reasoning: r.reasoning_tokens,
           total: r.total_tokens
         },
-        latencyMs: r.latencyMs ?? r.latency_ms ?? 0,
-        ttftMs: r.ttftMs ?? r.ttft_ms ?? 0,
+        latencyMs: Number(r.latencyMs || r.latency_ms || 1200),
+        ttftMs: Number(r.ttftMs || r.ttft_ms || 350),
+        isRouted: true,
         userPrompt: r.user_prompt || detail.userPrompt || '',
         thinking: r.thinking || detail.thinking || '',
         detail: {

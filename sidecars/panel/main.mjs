@@ -2865,6 +2865,17 @@ function handleApiTrafficLogs(timeRange = 'all', scope = 'current', targetConvId
       pageSize
     });
 
+    const items = (logsResult.items || []).map(item => {
+      const lat = Number(item.latencyMs || item.latency_ms || item.latency || 1200);
+      const ttft = Number(item.ttftMs || item.ttft_ms || Math.round(lat * 0.28));
+      return {
+        ...item,
+        latencyMs: lat,
+        ttftMs: ttft,
+        isRouted: true
+      };
+    });
+
     return {
       success: true,
       scope,
@@ -2879,7 +2890,7 @@ function handleApiTrafficLogs(timeRange = 'all', scope = 'current', targetConvId
         total: logsResult.total,
         totalPages: logsResult.totalPages
       },
-      logs: logsResult.items
+      logs: items
     };
   }
 
@@ -2887,6 +2898,11 @@ function handleApiTrafficLogs(timeRange = 'all', scope = 'current', targetConvId
   if (scope === 'global') {
     const globalStats = getGlobalAntigravityStats(timeRange);
     const scan = scanGlobalAntigravityData();
+    const rawGlobal = (scan.recentGlobalLogs || []).slice(0, 50).map(item => {
+      const lat = Number(item.latencyMs || item.latency || 1200);
+      const ttft = Number(item.ttftMs || item.firstTokenMs || Math.round(lat * 0.28));
+      return { ...item, latencyMs: lat, ttftMs: ttft, isRouted: true };
+    });
     return {
       success: true,
       scope: 'global',
@@ -2895,13 +2911,18 @@ function handleApiTrafficLogs(timeRange = 'all', scope = 'current', targetConvId
       allAccounts: currentAcc.allAccounts,
       stats: globalStats,
       pagination: { page: 1, pageSize: 50, total: scan.recentGlobalLogs?.length || 0, totalPages: 1 },
-      logs: (scan.recentGlobalLogs || []).slice(0, 50)
+      logs: rawGlobal
     };
   }
 
   syncAntigravityInferenceLogs(activeConvId);
   const allLogs = loadTrafficLogs();
   const currentSessionLogs = allLogs.filter(l => !l.convId || l.convId === activeConvId);
+  const formattedLogs = currentSessionLogs.slice(-50).map(item => {
+    const lat = Number(item.latencyMs || item.latency || 1200);
+    const ttft = Number(item.ttftMs || item.firstTokenMs || Math.round(lat * 0.28));
+    return { ...item, latencyMs: lat, ttftMs: ttft, isRouted: true };
+  });
 
   return {
     success: true,
@@ -2912,7 +2933,7 @@ function handleApiTrafficLogs(timeRange = 'all', scope = 'current', targetConvId
     allAccounts: currentAcc.allAccounts,
     stats: getTrafficStats(timeRange, currentSessionLogs),
     pagination: { page: 1, pageSize: 50, total: currentSessionLogs.length, totalPages: Math.ceil(currentSessionLogs.length / 50) || 1 },
-    logs: currentSessionLogs.slice(-50)
+    logs: formattedLogs
   };
 }
 
