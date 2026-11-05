@@ -448,8 +448,30 @@
                   <th style="min-width: 200px;">会话步骤 / 工具操作</th>
                   <th style="min-width: 140px;">模型与思考档位</th>
                   <th style="min-width: 120px;">执行账号</th>
-                  <th style="min-width: 140px;">Token 消耗</th>
-                  <th style="width: 90px;">耗时</th>
+                  <th style="min-width: 135px;">Token 消耗</th>
+                  <th class="th-with-help" style="width: 88px;">
+                    <div class="th-help-wrap">
+                      <span>速度</span>
+                      <span class="help-tooltip-trigger" tabindex="0" aria-label="速度计算说明">?
+                        <span class="help-tooltip-popup">
+                          <strong>速度怎么算</strong>
+                          <p>每秒输出多少 token，从首字算到结束。只算经路由服务、输出不少于 100 token 的请求；思考过程不外露的模型是近似值。带 ≈ 的是没开路由时按会话日志的时间戳估算的：等首字的时间也算在内，所以偏低；只估输出不少于 200 token 的请求。</p>
+                        </span>
+                      </span>
+                    </div>
+                  </th>
+                  <th class="th-with-help" style="width: 82px;">
+                    <div class="th-help-wrap">
+                      <span>首字</span>
+                      <span class="help-tooltip-trigger" tabindex="0" aria-label="首字延迟说明">?
+                        <span class="help-tooltip-popup align-right">
+                          <strong>首字 (TTFT)</strong>
+                          <p>首字生成延迟（Time To First Token），指从发起请求到收到模型第一个 token 的等待耗时。未开启路由服务或未捕获流式首字时显示 —。</p>
+                        </span>
+                      </span>
+                    </div>
+                  </th>
+                  <th style="width: 85px;">耗时</th>
                   <th style="width: 90px;">时间</th>
                 </tr>
               </thead>

@@ -2695,6 +2695,7 @@ body {
 
 .traffic-table {
   width: 100%;
+  min-width: 880px;
   border-collapse: collapse;
   font-size: 11.5px;
   text-align: left;
@@ -2940,6 +2941,137 @@ body {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 表头带说明问号与悬浮气泡 */
+.th-with-help {
+  position: relative;
+  user-select: none;
+}
+
+.th-help-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.help-tooltip-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: help;
+  position: relative;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.help-tooltip-trigger:hover,
+.help-tooltip-trigger:focus-visible {
+  color: #38bdf8;
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.help-tooltip-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(22, 26, 35, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 12px 14px;
+  width: 290px;
+  color: #c9d1d9;
+  font-size: 11.5px;
+  line-height: 1.6;
+  white-space: normal;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1000;
+}
+
+.help-tooltip-popup.align-right {
+  left: auto;
+  right: -10px;
+  transform: none;
+}
+
+.help-tooltip-popup strong {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 6px;
+  letter-spacing: 0.2px;
+}
+
+.help-tooltip-popup p {
+  margin: 0;
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
+.help-tooltip-trigger:hover .help-tooltip-popup,
+.help-tooltip-trigger:focus-visible .help-tooltip-popup {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* 速度与首字列 */
+.traffic-speed-cell,
+.traffic-ttft-cell {
+  display: flex;
+  align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: nowrap;
+}
+
+.traffic-speed-val {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.traffic-speed-val.approx {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.traffic-speed-val .unit {
+  font-size: 9.5px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.traffic-ttft-val {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #34d399;
+}
+
+.cell-dash {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 400;
+  user-select: none;
 }
 
 /* 耗时与首字 */

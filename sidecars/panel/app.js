@@ -4806,6 +4806,37 @@
       const latencyMs = log.latencyMs || 0;
       const timeVal = log.timestamp || log.time || Date.now();
 
+      // 速度与首字计算 (严格遵循行业规范与提示气泡规则)
+      const isRouted = Boolean(log.isRouted || log.hasRouting || log.detail?.isRouted);
+      const ttftMs = log.ttftMs || 0;
+      let speedHtml = '<span class="cell-dash">—</span>';
+      let ttftHtml = '<span class="cell-dash">—</span>';
+
+      if (isRouted) {
+        // 1. 经路由服务：只算经路由服务、输出不少于 100 token 的请求；从首字算到结束
+        if (ttftMs > 0) {
+          const ttftStr = ttftMs >= 1000 ? `${(ttftMs / 1000).toFixed(2)}s` : `${ttftMs}ms`;
+          ttftHtml = `<span class="traffic-ttft-val" title="首字延迟: ${ttftStr}">${ttftStr}</span>`;
+        }
+        if (outTok >= 100 && latencyMs > ttftMs) {
+          const genSec = (latencyMs - ttftMs) / 1000;
+          if (genSec > 0.05) {
+            const spd = (outTok / genSec).toFixed(1);
+            speedHtml = `<span class="traffic-speed-val" title="经路由测算：${outTok} tokens / ${genSec.toFixed(2)}s">${spd} <small class="unit">t/s</small></span>`;
+          }
+        }
+      } else {
+        // 2. 没开路由：按会话日志的时间戳估算：等首字的时间也算在内，所以偏低；只估输出不少于 200 token 的请求
+        ttftHtml = '<span class="cell-dash" title="未启用路由转发，无法精确捕获流式首字">—</span>';
+        if (outTok >= 200 && latencyMs > 0) {
+          const totalSec = latencyMs / 1000;
+          if (totalSec > 0.05) {
+            const spd = (outTok / totalSec).toFixed(1);
+            speedHtml = `<span class="traffic-speed-val approx" title="没开路由按会话时间戳估算：等首字的时间也算在内，偏低">≈ ${spd} <small class="unit">t/s</small></span>`;
+          }
+        }
+      }
+
       return `
         <tr class="traffic-row row-kind-${rowKind}" data-id="${escapeHtml(log.id || log.eventId || '')}">
           <td>
@@ -4846,6 +4877,16 @@
               <div class="traffic-token-total">
                 <span>Σ ${formatCompactNum(totalTok)}</span>
               </div>
+            </div>
+          </td>
+          <td>
+            <div class="traffic-speed-cell">
+              ${speedHtml}
+            </div>
+          </td>
+          <td>
+            <div class="traffic-ttft-cell">
+              ${ttftHtml}
             </div>
           </td>
           <td>
@@ -5803,6 +5844,19 @@ TotalTokens: ${(log.tokens?.input || 0) + (log.tokens?.output || 0) + (log.token
       const lat = log.latencyMs || 0;
       const ttft = log.ttftMs || Math.round(lat * 0.28);
       const gen = Math.max(0, lat - ttft - 32);
+      const outTok = log.tokens?.output || 0;
+      const isRouted = Boolean(log.isRouted || log.hasRouting || log.detail?.isRouted);
+      let speedText = '—';
+      if (isRouted) {
+        if (outTok >= 100 && gen > 50) {
+          speedText = `${(outTok / (gen / 1000)).toFixed(1)} t/s`;
+        }
+      } else {
+        if (outTok >= 200 && lat > 50) {
+          speedText = `≈ ${(outTok / (lat / 1000)).toFixed(1)} t/s`;
+        }
+      }
+
       container.innerHTML = `
         <div class="postman-timing-panel" style="padding: 24px; color: #c9d1d9; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -5812,22 +5866,26 @@ TotalTokens: ${(log.tokens?.input || 0) + (log.tokens?.output || 0) + (log.token
             </div>
             <button class="btn btn-secondary btn-xs" id="btnCopyPostmanTiming">复制诊断</button>
           </div>
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
               <div style="font-size: 11px; color: #8b949e; margin-bottom: 6px;">总步骤耗时 (Total)</div>
-              <div style="font-size: 20px; font-weight: 700; color: #f0f6fc;">${lat > 1000 ? (lat / 1000).toFixed(2) + 's' : lat + 'ms'}</div>
+              <div style="font-size: 18px; font-weight: 700; color: #f0f6fc;">${lat > 1000 ? (lat / 1000).toFixed(2) + 's' : lat + 'ms'}</div>
             </div>
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
               <div style="font-size: 11px; color: #8b949e; margin-bottom: 6px;">首字延迟 (TTFT)</div>
-              <div style="font-size: 20px; font-weight: 700; color: #38bdf8;">${ttft}ms</div>
+              <div style="font-size: 18px; font-weight: 700; color: #38bdf8;">${isRouted && ttft > 0 ? (ttft >= 1000 ? (ttft / 1000).toFixed(2) + 's' : ttft + 'ms') : '—'}</div>
             </div>
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
               <div style="font-size: 11px; color: #8b949e; margin-bottom: 6px;">模型推理生成 (Gen)</div>
-              <div style="font-size: 20px; font-weight: 700; color: #3fb950;">${gen}ms</div>
+              <div style="font-size: 18px; font-weight: 700; color: #3fb950;">${gen > 1000 ? (gen / 1000).toFixed(2) + 's' : gen + 'ms'}</div>
             </div>
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 14px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
+              <div style="font-size: 11px; color: #8b949e; margin-bottom: 6px;">输出速度 (Speed)</div>
+              <div style="font-size: 18px; font-weight: 700; color: #e2e8f0;">${speedText}</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px;">
               <div style="font-size: 11px; color: #8b949e; margin-bottom: 6px;">本地 IPC / 文件 I/O</div>
-              <div style="font-size: 20px; font-weight: 700; color: #a371f7;">32ms</div>
+              <div style="font-size: 18px; font-weight: 700; color: #a371f7;">32ms</div>
             </div>
           </div>
           <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px;">

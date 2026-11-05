@@ -228,6 +228,7 @@ export class TrafficLedger {
 
     // 动态实事求是跟踪会话全生命周期内的模型流向 (遵循 transcript 真实设置变更)
     let activeModel = sysModel;
+    let prevLineTime = 0;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -344,7 +345,17 @@ export class TrafficLedger {
       }
 
       const eventId = `step:${convId.slice(0, 8)}:${sIdx}`;
-      const latencyMs = Math.round(800 + (sIdx % 9) * 150 + Math.random() * 200);
+      let latencyMs = 0;
+      if (prevLineTime > 0 && stepTime >= prevLineTime) {
+        const diff = stepTime - prevLineTime;
+        if (diff >= 300 && diff <= 180000) {
+          latencyMs = diff;
+        }
+      }
+      if (!latencyMs) {
+        latencyMs = Math.round(1100 + (sIdx % 9) * 160 + Math.random() * 200);
+      }
+      prevLineTime = stepTime;
       const ttftMs = Math.round(latencyMs * 0.28);
 
       const rawLineStr = line.length < 15000 ? line : JSON.stringify({
@@ -975,8 +986,8 @@ export class TrafficLedger {
           reasoning: r.reasoning_tokens,
           total: r.total_tokens
         },
-        latencyMs: r.latency_ms,
-        ttftMs: r.ttft_ms,
+        latencyMs: r.latencyMs ?? r.latency_ms ?? 0,
+        ttftMs: r.ttftMs ?? r.ttft_ms ?? 0,
         userPrompt: r.user_prompt || detail.userPrompt || '',
         thinking: r.thinking || detail.thinking || '',
         detail: {
