@@ -66,6 +66,12 @@
             <span class="pill-text">派发</span>
           </div>
 
+          <!-- 轻量模式胶囊切换按钮 -->
+          <button id="btnToggleLiteModeTop" class="status-pill btn-lite-toggle" title="一键切换：🍃 轻量模式 (降载省电) / ⚡ 全速模式 (毛玻璃动效+高频遥测)" aria-pressed="false">
+            <span class="lite-toggle-icon" id="liteModeTopIcon">⚡</span>
+            <span class="pill-text" id="liteModeTopText">全速</span>
+          </button>
+
           <button id="btnRefreshAll" class="btn-refresh-icon" title="刷新数据 (双击或按 Ctrl+R 重新加载整页)">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -740,6 +746,14 @@
                   <input type="checkbox" id="cfgEnableWebServer">
                   <span class="switch-slider"></span>
                   <span class="switch-label">随插件自启独立 Web 端网页服务 (默认关闭)</span>
+                </label>
+              </div>
+
+              <div class="form-row checkbox-row" style="margin-top: 10px;">
+                <label class="compact-switch">
+                  <input type="checkbox" id="cfgEnableLiteMode">
+                  <span class="switch-slider"></span>
+                  <span class="switch-label">🍃 全局轻量低能耗模式 (移除毛玻璃滤镜与动效、停用全盘扫描、守护降频至 90s)</span>
                 </label>
               </div>
 

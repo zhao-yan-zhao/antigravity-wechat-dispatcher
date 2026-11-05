@@ -47,6 +47,64 @@
   let lastDispatchedTime = 0;
   let toastTimer = null;
 
+  // ---------------------------------------------------------------------------
+  // 🍃 全局轻量模式 (Lite Mode) 状态管理与降载联动
+  // ---------------------------------------------------------------------------
+  let isLiteMode = localStorage.getItem('wechat-dispatcher-lite-mode') === 'true';
+
+  function applyLiteMode(enable, syncBackend = true) {
+    isLiteMode = Boolean(enable);
+    localStorage.setItem('wechat-dispatcher-lite-mode', isLiteMode ? 'true' : 'false');
+
+    if (isLiteMode) {
+      document.body.classList.add('lite-mode');
+    } else {
+      document.body.classList.remove('lite-mode');
+    }
+
+    // 顶栏胶囊同步
+    const btnTop = document.getElementById('btnToggleLiteModeTop');
+    const topIcon = document.getElementById('liteModeTopIcon');
+    const topText = document.getElementById('liteModeTopText');
+    if (btnTop) {
+      if (isLiteMode) {
+        btnTop.classList.add('active');
+        btnTop.setAttribute('aria-pressed', 'true');
+        btnTop.title = '当前：🍃 轻量模式 (降载省电，已停用毛玻璃动效与后台全盘扫描) · 点击切换全速';
+        if (topIcon) topIcon.textContent = '🍃';
+        if (topText) topText.textContent = '轻量';
+      } else {
+        btnTop.classList.remove('active');
+        btnTop.setAttribute('aria-pressed', 'false');
+        btnTop.title = '当前：⚡ 全速模式 (全量毛玻璃动效与高频遥测) · 点击切换轻量';
+        if (topIcon) topIcon.textContent = '⚡';
+        if (topText) topText.textContent = '全速';
+      }
+    }
+
+    // 设置中心复选框同步
+    const chkSettings = document.getElementById('cfgEnableLiteMode');
+    if (chkSettings) {
+      chkSettings.checked = isLiteMode;
+    }
+
+    // 重启降载轮询计时器
+    restartTimersForLiteMode();
+
+    if (syncBackend) {
+      apiFetch('/api/services/lite-mode', {
+        method: 'POST',
+        body: JSON.stringify({ enabled: isLiteMode })
+      }).catch(() => {});
+    }
+  }
+
+  function restartTimersForLiteMode() {
+    startTrafficPolling();
+    startTimelinePolling();
+    startAutoDispatchWorker();
+  }
+
   function showToast(msg, isError = false) {
     const toast = document.getElementById('toastNotification');
     if (!toast) return;
@@ -310,6 +368,25 @@
     bindMcpEvents();
     bindSettingsEvents();
     setupManagerTrafficDetailEngine();
+
+    // 初始化全局轻量模式状态与双向事件绑定
+    applyLiteMode(isLiteMode, false);
+
+    const btnToggleLiteTop = document.getElementById('btnToggleLiteModeTop');
+    if (btnToggleLiteTop) {
+      btnToggleLiteTop.addEventListener('click', () => {
+        applyLiteMode(!isLiteMode, true);
+        showToast(isLiteMode ? '🍃 已开启全局轻量模式 (降低能耗与视觉开销)' : '⚡ 已恢复全速运行模式');
+      });
+    }
+
+    const chkLiteSettings = document.getElementById('cfgEnableLiteMode');
+    if (chkLiteSettings) {
+      chkLiteSettings.addEventListener('change', (e) => {
+        applyLiteMode(e.target.checked, true);
+        showToast(isLiteMode ? '🍃 已开启全局轻量模式' : '⚡ 已恢复全速运行模式');
+      });
+    }
 
     // 首屏立即预渲染排行榜，杜绝空置
     if (typeof renderDashboardRankings === 'function') {
@@ -915,16 +992,18 @@
   let autoDispatchWorkerTimer = null;
   function startAutoDispatchWorker() {
     if (autoDispatchWorkerTimer) clearInterval(autoDispatchWorkerTimer);
+    const interval = isLiteMode ? 10000 : 1500;
     autoDispatchWorkerTimer = setInterval(() => {
       checkWechatAutoDispatch();
-    }, 1500);
+    }, interval);
   }
 
   function startTimelinePolling() {
     stopTimelinePolling();
+    const interval = isLiteMode ? 60000 : 3000;
     autoRefreshTimer = setInterval(() => {
       refreshAll();
-    }, 3000);
+    }, interval);
   }
 
   function stopTimelinePolling() {
@@ -4287,6 +4366,7 @@
 
   function startTrafficPolling() {
     if (trafficPollTimer) clearInterval(trafficPollTimer);
+    const interval = isLiteMode ? 60000 : 3500;
     trafficPollTimer = setInterval(() => {
       if (trafficAutoRefresh && (activeTab === 'tab-traffic' || activeTab === 'tab-timeline')) {
         loadTrafficLogs(true, activeTrafficTimeRange, activeTrafficScope);
@@ -4294,7 +4374,7 @@
           loadTimeline();
         }
       }
-    }, 3500);
+    }, interval);
   }
 
   // 定价标准字典 (用于多维度时间切片动态核算)

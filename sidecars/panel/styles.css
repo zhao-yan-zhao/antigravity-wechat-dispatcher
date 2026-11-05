@@ -7178,3 +7178,84 @@ body {
   }
 }
 
+/* ==========================================================================
+   全局轻量模式 (Lite Mode) - 纯平实色与 GPU 极速降载
+   ========================================================================== */
+.btn-lite-toggle {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.btn-lite-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #f1f5f9;
+}
+
+.btn-lite-toggle.active {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #34d399 !important;
+}
+
+.btn-lite-toggle.active .lite-toggle-icon {
+  filter: drop-shadow(0 0 4px #10b981);
+}
+
+body.lite-mode {
+  --bg-primary: #0f1118;
+  --bg-surface: #141722;
+  --bg-elevated: #1a1e2b;
+}
+
+/* 彻底卸除毛玻璃与 GPU 复合层 */
+body.lite-mode *,
+body.lite-mode *::before,
+body.lite-mode *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 停用所有无意义的无限循环呼吸动画 */
+body.lite-mode .pulse-dot,
+body.lite-mode .badge-dot,
+body.lite-mode .traffic-status-dot,
+body.lite-mode .dot-pulse {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* 卡片与表格实色替换 */
+body.lite-mode .traffic-table-wrapper,
+body.lite-mode .bento-card,
+body.lite-mode .step-card,
+body.lite-mode .kanban-header-card,
+body.lite-mode .traffic-diff-modal-container {
+  background: #141722 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.lite-mode .traffic-table thead {
+  background: #10121a !important;
+}
+
+body.lite-mode .help-tooltip-popup {
+  background: #161922 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.lite-mode .traffic-table tbody tr:hover {
+  background: #191e2e !important;
+}
+
+

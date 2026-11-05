@@ -5895,6 +5895,17 @@ app.api('/api/feishu/event', (payload) => handleApiFeishuEvent(payload));
 app.api('/api/feishu/status', () => handleApiFeishuStatus(), 'GET');
 app.api('/api/feishu/bind', (payload) => handleApiFeishuBind(payload));
 app.api('/api/services/status', () => getServicesStatus(), 'GET');
+app.api('/api/services/lite-mode', (payload) => {
+  const enabled = Boolean(payload?.enabled);
+  if (trafficLedger) {
+    trafficLedger.setLiteMode(enabled);
+  }
+  startWatchdogTimer(enabled ? 90000 : 10000);
+  return { success: true, isLiteMode: enabled };
+}, 'POST');
+app.api('/api/services/lite-mode', () => {
+  return { success: true, isLiteMode: trafficLedger ? Boolean(trafficLedger.isLiteMode) : false };
+}, 'GET');
 app.api('/api/services/webserver/status', () => ({
   success: true,
   running: isWebServerRunning,
@@ -7208,9 +7219,12 @@ startDailyReportScheduler({
 });
 
 // ---------------------------------------------------------------------------
-// 后台自动巡检守护：每 10 秒检测微信随身端运行状态，断开自动拉起
+// 后台自动巡检守护：动态频率检测微信随身端运行状态，断开自动拉起
 // ---------------------------------------------------------------------------
-setInterval(() => {
+let watchdogIntervalMs = 10000;
+let watchdogTimer = null;
+
+function runWatchdogCheck() {
   try {
     const cfg = loadConfig();
     if (cfg.autoStartWechatBot !== false && !isStoppingWechatBot) {
@@ -7226,7 +7240,15 @@ setInterval(() => {
   } catch (e) {
     console.error('[ai-assistant][WATCHDOG_ERROR]', e);
   }
-}, 10000);
+}
+
+function startWatchdogTimer(intervalMs = 10000) {
+  if (watchdogTimer) clearInterval(watchdogTimer);
+  watchdogIntervalMs = intervalMs;
+  watchdogTimer = setInterval(runWatchdogCheck, watchdogIntervalMs);
+}
+
+startWatchdogTimer(10000);
 // ---------------------------------------------------------------------------
 // 后台自动检测已派发微信任务的执行完成状态，自动更新看板并触发主动通知
 // ---------------------------------------------------------------------------

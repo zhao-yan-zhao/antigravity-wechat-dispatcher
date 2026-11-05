@@ -521,6 +521,17 @@ export class TrafficLedger {
     }
   }
 
+  setLiteMode(enabled) {
+    this.isLiteMode = Boolean(enabled);
+    if (this.isLiteMode) {
+      this.stopBackgroundScanner();
+      console.log('[TrafficLedger] 已进入轻量模式：已停止后台全盘扫描，采用按需懒加载');
+    } else {
+      this.startBackgroundScanner(25000);
+      console.log('[TrafficLedger] 已恢复全速模式：重新开启后台全盘扫描');
+    }
+  }
+
   // 毫秒级 SQL 聚合统计 (全会话或当前会话)
   getStats({ scope = 'current', convId = '', timeRange = 'all' } = {}) {
     if (!this.db) return null;
